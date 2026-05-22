@@ -8,8 +8,10 @@ load_dotenv(Path(__file__).resolve().parent.parent / '.env')
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-akshoponline-2024-change-in-production-xk9m2p1q'
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+DEBUG = False
+ALLOWED_HOSTS = ['beyalubet.com', 'www.beyalubet.com']
+CORS_ALLOWED_ORIGINS =['https://beyalubet.com']
+FRONTEND_URL = 'https://beyalubet.com'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
