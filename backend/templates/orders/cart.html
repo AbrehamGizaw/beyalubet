@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}My Cart — AkShopOnline{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="fw-bold mb-4"><i class="bi bi-cart3 me-2 text-primary"></i>My Cart</h2>
+
+  {% if items %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          {% for item in items %}
+          <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+            <!-- Image -->
+            {% with img=item.product.main_image %}
+            {% if img %}
+            <img src="{{ img.image.url }}" width="80" height="80" class="rounded object-fit-cover border flex-shrink-0" alt="">
+            {% else %}
+            <div class="bg-light rounded border d-flex align-items-center justify-content-center flex-shrink-0" style="width:80px;height:80px">
+              <i class="bi bi-image text-muted fs-4"></i>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- Info -->
+            <div class="flex-grow-1">
+              <a href="{% url 'products:detail' item.product.slug %}" class="fw-semibold text-dark text-decoration-none">
+                {{ item.product.title }}
+              </a>
+              <div class="text-muted small">{{ item.product.category.name|default:'' }}</div>
+              <div class="text-primary fw-bold">${{ item.product.price }}</div>
+            </div>
+
+            <!-- Quantity -->
+            <form method="post" action="{% url 'orders:update_cart' item.pk %}" class="d-flex align-items-center gap-2">
+              {% csrf_token %}
+              <div class="input-group input-group-sm" style="width:110px">
+                <button type="button" class="btn btn-outline-secondary" onclick="this.nextElementSibling.stepDown();this.form.submit()">−</button>
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}"
+                  class="form-control text-center" onchange="this.form.submit()">
+                <button type="button" class="btn btn-outline-secondary" onclick="this.previousElementSibling.stepUp();this.form.submit()">+</button>
+              </div>
+            </form>
+
+            <!-- Subtotal -->
+            <div class="text-end" style="min-width:80px">
+              <div class="fw-bold">${{ item.subtotal }}</div>
+              <a href="{% url 'orders:remove_from_cart' item.pk %}" class="text-danger small text-decoration-none">
+                <i class="bi bi-trash me-1"></i>Remove
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent fw-bold py-3">Order Summary</div>
+        <div class="card-body">
+          {% for item in items %}
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="text-muted">{{ item.product.title|truncatechars:25 }} × {{ item.quantity }}</span>
+            <span>${{ item.subtotal }}</span>
+          </div>
+          {% endfor %}
+          <hr>
+          <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+            <span>Total</span>
+            <span class="text-primary">${{ cart.total }}</span>
+          </div>
+          <a href="{% url 'orders:checkout' %}" class="btn btn-primary w-100 btn-lg">
+            <i class="bi bi-bag-check me-2"></i>Proceed to Checkout
+          </a>
+          <a href="{% url 'products:list' %}" class="btn btn-outline-secondary w-100 mt-2">
+            <i class="bi bi-arrow-left me-1"></i>Continue Shopping
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-cart-x display-1 text-muted"></i>
+    <h4 class="mt-3 text-muted">Your cart is empty</h4>
+    <p class="text-muted">Browse products and add items to your cart.</p>
+    <a href="{% url 'products:list' %}" class="btn btn-primary mt-2">
+      <i class="bi bi-search me-1"></i>Browse Products
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

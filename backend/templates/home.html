@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}AkShopOnline — Buy & Sell Everything{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero-section text-white py-5" style="background: linear-gradient(135deg, #0d6efd 0%, #0a4bbd 100%);">
+  <div class="container py-4">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <h1 class="display-4 fw-bold mb-3">
+          Buy & Sell <span class="text-warning">Everything</span><br>in One Place
+        </h1>
+        <p class="lead mb-4 text-light">
+          Electronics, Furniture, Clothes, Home Materials, and more.<br>
+          Join thousands of buyers and sellers across the marketplace.
+        </p>
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="{% url 'products:list' %}" class="btn btn-warning btn-lg px-4">
+            <i class="bi bi-search me-2"></i>Browse Products
+          </a>
+          {% if not user.is_authenticated %}
+          <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg px-4">
+            <i class="bi bi-shop me-2"></i>Start Selling
+          </a>
+          {% elif user.role == 'seller' %}
+          <a href="{% url 'products:create' %}" class="btn btn-outline-light btn-lg px-4">
+            <i class="bi bi-plus-circle me-2"></i>Post a Product
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-5 text-center mt-4 mt-lg-0">
+        <div class="row g-2 justify-content-center">
+          <div class="col-4 text-center">
+            <div class="bg-white bg-opacity-10 rounded-3 p-3">
+              <i class="bi bi-shop-window display-4 text-warning"></i>
+              <p class="small mt-1 mb-0">1000+ Sellers</p>
+            </div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="bg-white bg-opacity-10 rounded-3 p-3">
+              <i class="bi bi-box-seam display-4 text-warning"></i>
+              <p class="small mt-1 mb-0">5000+ Products</p>
+            </div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="bg-white bg-opacity-10 rounded-3 p-3">
+              <i class="bi bi-people display-4 text-warning"></i>
+              <p class="small mt-1 mb-0">10k+ Buyers</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Categories -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="fw-bold mb-4 text-center">Shop by Category</h2>
+    <div class="row g-3">
+      {% for cat in categories %}
+      <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+        <a href="{% url 'products:list' %}?category={{ cat.slug }}" class="text-decoration-none">
+          <div class="card h-100 border-0 shadow-sm text-center category-card py-3 hover-lift">
+            <div class="card-body p-2">
+              <i class="bi {{ cat.icon }} display-5 text-primary mb-2"></i>
+              <p class="card-text fw-semibold text-dark small mb-0">{{ cat.name }}</p>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Products -->
+{% if featured_products %}
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-bold mb-0"><i class="bi bi-star-fill text-warning me-2"></i>Featured Products</h2>
+      <a href="{% url 'products:list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+    </div>
+    <div class="row g-3">
+      {% for product in featured_products %}
+      {% include 'products/_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Latest Products -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-bold mb-0"><i class="bi bi-clock text-primary me-2"></i>Latest Listings</h2>
+      <a href="{% url 'products:list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+    </div>
+    {% if latest_products %}
+    <div class="row g-3">
+      {% for product in latest_products %}
+      {% include 'products/_card.html' %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-box-seam display-1 text-muted"></i>
+      <h4 class="text-muted mt-3">No products yet</h4>
+      {% if not user.is_authenticated %}
+      <p class="text-muted">Be the first to <a href="{% url 'accounts:register' %}">register as a seller</a> and post products!</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-5">How It Works</h2>
+    <div class="row g-4 text-center">
+      <div class="col-md-3">
+        <div class="p-3">
+          <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px">
+            <i class="bi bi-person-plus fs-2 text-primary"></i>
+          </div>
+          <h5 class="fw-bold">1. Create Account</h5>
+          <p class="text-muted small">Register as a buyer to shop or as a seller to list products.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3">
+          <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px">
+            <i class="bi bi-box-seam fs-2 text-warning"></i>
+          </div>
+          <h5 class="fw-bold">2. List / Browse</h5>
+          <p class="text-muted small">Sellers subscribe and post products. Buyers browse and find deals.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3">
+          <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px">
+            <i class="bi bi-cart-check fs-2 text-success"></i>
+          </div>
+          <h5 class="fw-bold">3. Place Order</h5>
+          <p class="text-muted small">Add items to cart, enter shipping info, and confirm your order.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-3">
+          <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px">
+            <i class="bi bi-credit-card fs-2 text-info"></i>
+          </div>
+          <h5 class="fw-bold">4. Pay & Receive</h5>
+          <p class="text-muted small">Pay directly to the seller's account and receive your goods.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA for Sellers -->
+{% if not user.is_authenticated or user.role == 'buyer' %}
+<section class="py-5 bg-primary text-white">
+  <div class="container text-center py-3">
+    <h2 class="fw-bold mb-3">Start Selling Today</h2>
+    <p class="lead mb-4">Join our growing marketplace. Reach thousands of buyers. Choose a plan that fits your business.</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="{% url 'subscriptions:plans' %}" class="btn btn-warning btn-lg px-4">
+        <i class="bi bi-tags me-2"></i>View Pricing Plans
+      </a>
+      <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg px-4">
+        <i class="bi bi-person-plus me-2"></i>Register Now
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

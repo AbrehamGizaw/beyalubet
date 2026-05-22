@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Subscribe to {{ plan.name }} — AkShopOnline{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold">Subscribe to <span class="text-primary">{{ plan.name }}</span></h2>
+        <p class="text-muted">{{ plan.get_duration_display }} — <strong class="text-primary">${{ plan.price }}</strong></p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Payment Instructions -->
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-success text-white py-2 fw-bold">
+              <i class="bi bi-credit-card me-2"></i>Step 1: Make Payment
+            </div>
+            <div class="card-body">
+              <p class="text-muted small mb-3">
+                Transfer <strong class="text-success fs-5">${{ plan.price }}</strong> to AkShopOnline using one of the methods below:
+              </p>
+
+              <!-- Bank Transfer -->
+              <div class="bg-light rounded p-3 mb-3">
+                <h6 class="fw-bold mb-2"><i class="bi bi-bank me-2 text-primary"></i>Bank Transfer</h6>
+                <table class="table table-sm table-borderless mb-0 small">
+                  <tr><td class="text-muted">Bank:</td><td class="fw-semibold">{{ platform_info.bank_name }}</td></tr>
+                  <tr><td class="text-muted">Account #:</td><td class="fw-semibold user-select-all">{{ platform_info.account_number }}</td></tr>
+                  <tr><td class="text-muted">Name:</td><td class="fw-semibold">{{ platform_info.account_holder }}</td></tr>
+                  <tr><td class="text-muted">Amount:</td><td class="fw-bold text-success">${{ plan.price }}</td></tr>
+                </table>
+              </div>
+
+              <!-- Mobile Money -->
+              <div class="bg-light rounded p-3">
+                <h6 class="fw-bold mb-2"><i class="bi bi-phone me-2 text-success"></i>Mobile Money</h6>
+                <p class="mb-1 small"><span class="text-muted">Number:</span>
+                  <strong class="user-select-all">{{ platform_info.mobile_money }}</strong>
+                </p>
+                <p class="mb-0 small"><span class="text-muted">Amount:</span>
+                  <strong class="text-success">${{ plan.price }}</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirm Payment -->
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-primary text-white py-2 fw-bold">
+              <i class="bi bi-send-check me-2"></i>Step 2: Confirm Payment
+            </div>
+            <div class="card-body">
+              <!-- Plan Summary -->
+              <div class="bg-primary bg-opacity-10 rounded p-3 mb-3">
+                <h6 class="fw-bold mb-2">Plan Summary</h6>
+                <div class="small text-muted mb-1">Plan: <strong class="text-dark">{{ plan.name }}</strong></div>
+                <div class="small text-muted mb-1">Duration: <strong class="text-dark">{{ plan.get_duration_display }}</strong></div>
+                <div class="small text-muted mb-1">Products: <strong class="text-dark">Up to {{ plan.max_products }}</strong></div>
+                <div class="small text-muted">Amount: <strong class="text-success">${{ plan.price }}</strong></div>
+              </div>
+
+              <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label class="form-label fw-semibold small">{{ form.payment_reference.label }}</label>
+                  {{ form.payment_reference }}
+                  {% if form.payment_reference.errors %}
+                  <div class="text-danger small">{{ form.payment_reference.errors.0 }}</div>
+                  {% endif %}
+                  <div class="form-text">{{ form.payment_reference.help_text }}</div>
+                </div>
+                <div class="mb-3">
+                  <div class="form-check">
+                    {{ form.confirm }}
+                    <label class="form-check-label small" for="{{ form.confirm.id_for_label }}">
+                      {{ form.confirm.label }}
+                    </label>
+                  </div>
+                  {% if form.confirm.errors %}
+                  <div class="text-danger small">{{ form.confirm.errors.0 }}</div>
+                  {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="bi bi-check-circle me-2"></i>Activate Subscription
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="{% url 'subscriptions:plans' %}" class="text-muted small">
+          <i class="bi bi-arrow-left me-1"></i>Back to Plans
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

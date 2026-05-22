@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.title }} — AkShopOnline{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'products:list' %}">Products</a></li>
+      {% if product.category %}
+      <li class="breadcrumb-item"><a href="{% url 'products:list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a></li>
+      {% endif %}
+      <li class="breadcrumb-item active">{{ product.title|truncatechars:30 }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Image Gallery -->
+    <div class="col-md-5">
+      {% with imgs=product.images.all %}
+      {% if imgs %}
+      <div id="productCarousel" class="carousel slide border rounded-3 overflow-hidden shadow-sm" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          {% for img in imgs %}
+          <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <img src="{{ img.image.url }}" class="d-block w-100" style="height:380px;object-fit:contain;background:#f8f9fa;" alt="{{ product.title }}">
+          </div>
+          {% endfor %}
+        </div>
+        {% if imgs.count > 1 %}
+        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon"></span>
+        </button>
+        <div class="d-flex gap-2 p-2 overflow-auto bg-light">
+          {% for img in imgs %}
+          <img src="{{ img.image.url }}" width="60" height="60" class="rounded border cursor-pointer object-fit-cover"
+            onclick="bootstrap.Carousel.getInstance(document.getElementById('productCarousel')).to({{ forloop.counter0 }})" alt="">
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="bg-light rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="height:380px">
+        <i class="bi bi-image display-1 text-muted"></i>
+      </div>
+      {% endif %}
+      {% endwith %}
+    </div>
+
+    <!-- Product Info -->
+    <div class="col-md-7">
+      {% if product.category %}
+      <a href="{% url 'products:list' %}?category={{ product.category.slug }}" class="badge bg-primary text-decoration-none mb-2">
+        <i class="bi {{ product.category.icon }} me-1"></i>{{ product.category.name }}
+      </a>
+      {% endif %}
+      <h2 class="fw-bold mb-2">{{ product.title }}</h2>
+
+      <!-- Price -->
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="fs-2 fw-bold text-primary">${{ product.price }}</span>
+        {% if product.original_price %}
+        <span class="fs-5 text-muted text-decoration-line-through">${{ product.original_price }}</span>
+        <span class="badge bg-danger fs-6">-{{ product.discount_percentage }}% OFF</span>
+        {% endif %}
+      </div>
+
+      <!-- Meta -->
+      <div class="row g-2 mb-3">
+        <div class="col-auto">
+          <span class="badge bg-light text-dark border">
+            <i class="bi bi-tag me-1"></i>{{ product.get_condition_display }}
+          </span>
+        </div>
+        {% if product.location %}
+        <div class="col-auto">
+          <span class="badge bg-light text-dark border">
+            <i class="bi bi-geo-alt me-1"></i>{{ product.location }}
+          </span>
+        </div>
+        {% endif %}
+        <div class="col-auto">
+          <span class="badge bg-{% if product.in_stock %}success{% else %}danger{% endif %}">
+            <i class="bi bi-circle-fill me-1" style="font-size:8px"></i>
+            {% if product.in_stock %}{{ product.stock }} in stock{% else %}Out of Stock{% endif %}
+          </span>
+        </div>
+        <div class="col-auto">
+          <span class="badge bg-light text-dark border"><i class="bi bi-eye me-1"></i>{{ product.views }} views</span>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-4">
+        <h6 class="fw-bold text-muted text-uppercase small mb-2">Description</h6>
+        <p class="text-muted">{{ product.description|linebreaks }}</p>
+      </div>
+
+      <!-- Seller Info -->
+      <div class="card bg-light border-0 mb-4 p-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px">
+            <i class="bi bi-shop fs-4 text-primary"></i>
+          </div>
+          <div>
+            <h6 class="mb-0 fw-bold">
+              {% if product.seller.seller_profile.business_name %}
+                {{ product.seller.seller_profile.business_name }}
+              {% else %}
+                {{ product.seller.get_full_name|default:product.seller.username }}
+              {% endif %}
+            </h6>
+            <small class="text-muted">Seller since {{ product.seller.date_joined|date:"Y" }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      {% if user.is_authenticated %}
+        {% if user.role == 'buyer' %}
+          {% if product.in_stock %}
+          <div class="d-flex gap-3">
+            <form method="post" action="{% url 'orders:add_to_cart' product.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-lg px-4">
+                <i class="bi bi-cart-plus me-2"></i>Add to Cart
+              </button>
+            </form>
+            <a href="{% url 'orders:cart' %}" class="btn btn-outline-primary btn-lg px-4">
+              <i class="bi bi-cart3 me-2"></i>View Cart
+            </a>
+          </div>
+          {% else %}
+          <button class="btn btn-secondary btn-lg px-4" disabled>Out of Stock</button>
+          {% endif %}
+        {% elif user == product.seller %}
+        <div class="d-flex gap-2">
+          <a href="{% url 'products:edit' product.slug %}" class="btn btn-warning px-4">
+            <i class="bi bi-pencil me-2"></i>Edit Product
+          </a>
+          <a href="{% url 'products:delete' product.slug %}" class="btn btn-outline-danger px-4">
+            <i class="bi bi-trash me-2"></i>Remove
+          </a>
+        </div>
+        {% endif %}
+      {% else %}
+      <div class="alert alert-info">
+        <a href="{% url 'accounts:login' %}">Login</a> or
+        <a href="{% url 'accounts:register' %}">Register</a> as a buyer to purchase this product.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Payment Info (for sellers) -->
+  {% if user.is_authenticated and user.role == 'buyer' and product.in_stock %}
+  {% if product.seller.seller_profile.bank_name or product.seller.seller_profile.mobile_money %}
+  <div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-success text-white py-2">
+      <h6 class="mb-0"><i class="bi bi-credit-card me-2"></i>Seller Payment Information</h6>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">After placing your order, you can pay directly to the seller using the details below:</p>
+      <div class="row g-3">
+        {% if product.seller.seller_profile.bank_name %}
+        <div class="col-md-6">
+          <div class="bg-light rounded p-3">
+            <h6 class="fw-bold mb-2"><i class="bi bi-bank me-2 text-primary"></i>Bank Transfer</h6>
+            <table class="table table-sm table-borderless mb-0">
+              <tr><td class="text-muted small">Bank:</td><td class="fw-semibold small">{{ product.seller.seller_profile.bank_name }}</td></tr>
+              <tr><td class="text-muted small">Account #:</td><td class="fw-semibold small">{{ product.seller.seller_profile.account_number }}</td></tr>
+              <tr><td class="text-muted small">Account Name:</td><td class="fw-semibold small">{{ product.seller.seller_profile.account_holder }}</td></tr>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+        {% if product.seller.seller_profile.mobile_money %}
+        <div class="col-md-6">
+          <div class="bg-light rounded p-3">
+            <h6 class="fw-bold mb-2"><i class="bi bi-phone me-2 text-success"></i>Mobile Money</h6>
+            <p class="fw-semibold small mb-0">{{ product.seller.seller_profile.mobile_money }}</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <!-- Related Products -->
+  {% if related_products %}
+  <div class="mt-5">
+    <h4 class="fw-bold mb-3">Related Products</h4>
+    <div class="row g-3">
+      {% for p in related_products %}
+      {% with product=p %}
+      {% include 'products/_card.html' %}
+      {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

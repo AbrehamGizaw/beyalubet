@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Invoke-WebRequest -Uri \"http://127.0.0.1:8000/\" -UseBasicParsing -TimeoutSec 5)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://127.0.0.1:8000/\" -UseBasicParsing -TimeoutSec 6)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://127.0.0.1:8080/\" -UseBasicParsing -TimeoutSec 5)",
+      "Bash(python manage.py makemigrations accounts)",
+      "Bash(python create_platform_admin.py)",
+      "Bash(python -c ' *)",
+      "Bash(curl -v -X POST http://localhost:9000/api/auth/token/ -H \"Content-Type: application/json\" -d '{\"username\":\"platformadmin\",\"password\":\"Admin@1234\"}')",
+      "Bash(cd \"c:/Users/Abraham/desktop/djangoprojects/akshoponline/backend\")",
+      "Bash(cat /tmp/admin_token.txt)",
+      "Bash(echo \"Testing admin dashboard...\")",
+      "Bash(curl -s http://localhost:9000/api/admin/dashboard/ -H 'Authorization: Bearer __TRACKED_VAR__')",
+      "Bash(python -m json.tool)",
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(python manage.py runserver 9000 --noreload)",
+      "Bash(curl -s -X POST http://localhost:9000/api/auth/token/ -H 'Content-Type: application/json' -d '{\"username\":\"platformadmin\",\"password\":\"Admin@1234\"}')",
+      "Bash(not exist *)",
+      "PowerShell(cd \"C:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\"; Start-Process python -ArgumentList \"manage.py runserver 9000\" -WindowStyle Hidden -PassThru | Select-Object -ExpandProperty Id | Out-File \"$env:TEMP\\\\django_pid.txt\"; Start-Sleep -Seconds 3; Write-Output \"Server started\")",
+      "PowerShell(cd \"C:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\"; Start-Process -FilePath \"python\" -ArgumentList \"manage.py runserver 8000\" -RedirectStandardOutput \"$env:TEMP\\\\django_out.txt\" -RedirectStandardError \"$env:TEMP\\\\django_err.txt\" -NoNewWindow; Start-Sleep -Seconds 3; Get-Content \"$env:TEMP\\\\django_err.txt\" 2>&1 | Select-Object -First 20)",
+      "PowerShell(Start-Sleep -Seconds 2; Get-Content \"$env:TEMP\\\\django_err.txt\" 2>&1)",
+      "PowerShell(netstat -ano)",
+      "PowerShell(Get-Process -Id 3704 2>&1)",
+      "PowerShell(Get-Process -Id 4892,7864,17604 2>&1)",
+      "Bash(python -c \"from products.api_views import ProductReviewsAPIView, ReviewDetailAPIView; print\\('OK'\\)\")",
+      "PowerShell(cd \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\"; $env:DJANGO_SETTINGS_MODULE = \"akshoponline.settings\"; python -c \"import django; django.setup\\(\\); from products.api_views import ProductReviewsAPIView, ReviewDetailAPIView; print\\('OK'\\)\" 2>&1)",
+      "PowerShell(cd \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\"; $env:DJANGO_SETTINGS_MODULE = \"akshoponline.settings\"; python -c \"import django; django.setup\\(\\); from products.models import Review; print\\('Review model OK:', Review._meta.db_table\\)\" 2>&1)",
+      "PowerShell(cd \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\"; $env:DJANGO_SETTINGS_MODULE = \"akshoponline.settings\"; python manage.py showmigrations products 2>&1)",
+      "PowerShell(cd \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\"; $env:DJANGO_SETTINGS_MODULE = \"akshoponline.settings\"; python -c \"import django; django.setup\\(\\); from django.db import connection; cursor = connection.cursor\\(\\); cursor.execute\\(\\\\\"SELECT name FROM sqlite_master WHERE type='table' AND name='products_review'\\\\\"\\); print\\(cursor.fetchall\\(\\)\\)\" 2>&1)",
+      "PowerShell(cd \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\"; $env:DJANGO_SETTINGS_MODULE = \"akshoponline.settings\"; python manage.py shell -c \"from products.models import Review; print\\('Table OK, count:', Review.objects.count\\(\\)\\)\" 2>&1)",
+      "PowerShell(Stop-Process -Id 7864, 11676, 16080 -Force -ErrorAction SilentlyContinue; Write-Output \"Killed. Verifying port 9000 is free...\"; Start-Sleep -Seconds 2; $r = netstat -ano | findstr \":9000 \"; if \\($r\\) { Write-Output \"Still bound: $r\" } else { Write-Output \"Port 9000 is now free.\" })",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:9000/api/products/sumsung-galaxy-s-24-ed25c6/reviews/\" -Method GET -UseBasicParsing)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:9000/api/products/sumsung-galaxy-s-24-ed25c6/reviews/\" -Method GET -UseBasicParsing; Write-Output \"Status: $\\($r.StatusCode\\)\"; Write-Output \"Body: $\\($r.Content\\)\" } catch { Write-Output \"Error: $\\($_.Exception.Message\\)\"; Write-Output \"Status: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:9000/api/products/sumsung-galaxy-s-24-ed25c6/reviews/\" -Method GET -UseBasicParsing; \"Status: $\\($r.StatusCode\\) Body: $\\($r.Content\\)\" } catch { \"Error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:9000/api/admin/reviews/\" -Method GET -UseBasicParsing -Headers @{Authorization=\"Bearer test\"}; \"Status: $\\($r.StatusCode\\)\" } catch { \"Status: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "Bash(node -e \"require\\('bootstrap/dist/js/bootstrap.bundle.min.js'\\); console.log\\('ok'\\)\")",
+      "Bash(python manage.py makemigrations subscriptions --name platformsettings)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\frontend\\\\src\" -Filter \"*.jsx\" -Recurse)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\frontend\\\\public\" -Recurse | ForEach-Object { $_.FullName })",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\Beyalubet11.png\" \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\frontend\\\\public\\\\logo.png\")",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\frontend\\\\public\" -Force)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\\\\accounts\\\\\" -Force)",
+      "Bash(Get-Content \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\\\\akshoponline\\\\settings.py\" -Tail 40)",
+      "PowerShell($env:PGPASSWORD = \"1127\"; & \"psql\" -U postgres -c \"CREATE DATABASE beyalubet;\" 2>&1)",
+      "PowerShell(cd \"c:\\\\Users\\\\Abraham\\\\desktop\\\\djangoprojects\\\\akshoponline\\\\backend\"; $env:PYTHONIOENCODING=\"utf-8\"; python seed_categories.py 2>&1)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Abraham\\.claude\\projects\\c--Users-Abraham-desktop-djangoprojects-akshoponline\\memory"
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ product.title }} — AkShopOnline{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-warning py-3">
+          <h4 class="mb-0 fw-bold"><i class="bi bi-pencil me-2"></i>Edit Product</h4>
+        </div>
+        <div class="card-body p-4">
+          <!-- Current Image -->
+          {% with img=product.main_image %}
+          {% if img %}
+          <div class="mb-3">
+            <p class="text-muted small fw-semibold mb-1">Current Image:</p>
+            <img src="{{ img.image.url }}" height="120" class="rounded border" alt="{{ product.title }}">
+          </div>
+          {% endif %}
+          {% endwith %}
+
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-semibold">Product Title *</label>
+                <input type="text" name="title" class="form-control form-control-lg" value="{{ form.title.value }}" required>
+              </div>
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Category</label>
+                <select name="category" class="form-select">
+                  <option value="">— Select Category —</option>
+                  {% for value, label in form.fields.category.choices %}
+                  {% if value %}
+                  <option value="{{ value }}" {% if form.category.value|stringformat:'s' == value|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Condition</label>
+                <select name="condition" class="form-select">
+                  {% for value, label in form.fields.condition.choices %}
+                  <option value="{{ value }}" {% if form.condition.value == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea name="description" class="form-control" rows="5" required>{{ form.description.value }}</textarea>
+              </div>
+
+              <div class="col-sm-4">
+                <label class="form-label fw-semibold">Price ($)</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" name="price" step="0.01" class="form-control" value="{{ form.price.value }}" required>
+                </div>
+              </div>
+
+              <div class="col-sm-4">
+                <label class="form-label fw-semibold">Original Price ($)</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" name="original_price" step="0.01" class="form-control"
+                    value="{{ form.original_price.value|default:'' }}">
+                </div>
+              </div>
+
+              <div class="col-sm-4">
+                <label class="form-label fw-semibold">Stock</label>
+                <input type="number" name="stock" min="0" class="form-control" value="{{ form.stock.value }}">
+              </div>
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Location</label>
+                <input type="text" name="location" class="form-control" value="{{ form.location.value|default:'' }}">
+              </div>
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Replace Image <span class="text-muted small">(optional)</span></label>
+                <input type="file" name="main_image" class="form-control" accept="image/*">
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-warning px-4">
+                <i class="bi bi-check-circle me-2"></i>Save Changes
+              </button>
+              <a href="{% url 'products:detail' product.slug %}" class="btn btn-outline-secondary px-4">Cancel</a>
+              <a href="{% url 'products:delete' product.slug %}" class="btn btn-outline-danger ms-auto px-4">
+                <i class="bi bi-trash me-1"></i>Delete
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
