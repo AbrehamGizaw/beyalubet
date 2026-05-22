@@ -7,11 +7,13 @@ load_dotenv(Path(__file__).resolve().parent.parent / '.env')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-akshoponline-2024-change-in-production-xk9m2p1q'
-DEBUG = False
-ALLOWED_HOSTS = ['beyalubet.com', 'www.beyalubet.com']
-CORS_ALLOWED_ORIGINS =['https://beyalubet.com']
-FRONTEND_URL = 'https://beyalubet.com'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-akshoponline-2024-change-in-production-xk9m2p1q')
+
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+# In production .env set: ALLOWED_HOSTS=beyalubet.com,www.beyalubet.com
+_allowed = os.environ.get('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()] if _allowed else (['*'] if DEBUG else [])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -119,11 +121,13 @@ SIMPLE_JWT = {
 }
 
 # ── CORS ───────────────────────────────────────────────────────────────────────
+# Always allow localhost for development; production domain added via env var
+_cors_extra = os.environ.get('CORS_ALLOWED_ORIGINS', '')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
-]
+] + [o.strip() for o in _cors_extra.split(',') if o.strip()]
 CORS_ALLOW_CREDENTIALS = True
 
 # ── Email ──────────────────────────────────────────────────────────────────────
