@@ -51,12 +51,23 @@ class SubscribeAPIView(APIView):
         if not request.user.is_seller():
             return Response({'detail': 'Only sellers can subscribe.'}, status=403)
 
+        if SellerSubscription.objects.filter(seller=request.user, is_active=True).exists():
+            return Response({'detail': 'You already have an active subscription. Wait for it to expire before subscribing again.'}, status=400)
+        if SellerSubscription.objects.filter(seller=request.user, status='pending').exists():
+            return Response({'detail': 'You already have a pending subscription awaiting admin approval.'}, status=400)
+
         plan_id = request.data.get('plan') or request.data.get('plan_id')
         txn_id = (request.data.get('transaction_id') or '').strip() or None
+        sender_name = (request.data.get('sender_name') or '').strip()
+        screenshot = request.FILES.get('payment_screenshot')
         if not plan_id:
             return Response({'detail': 'plan is required.'}, status=400)
         if not txn_id:
             return Response({'detail': 'transaction_id is required.'}, status=400)
+        if not sender_name:
+            return Response({'detail': 'sender_name is required.'}, status=400)
+        if not screenshot:
+            return Response({'detail': 'payment_screenshot is required.'}, status=400)
         if SellerSubscription.objects.filter(transaction_id=txn_id).exists():
             return Response({'detail': 'This transaction ID is already in use.'}, status=400)
 
@@ -66,6 +77,8 @@ class SubscribeAPIView(APIView):
             plan=plan,
             amount_paid=plan.price,
             transaction_id=txn_id,
+            sender_name=sender_name,
+            payment_screenshot=screenshot,
             status='pending',
             is_active=False,
         )

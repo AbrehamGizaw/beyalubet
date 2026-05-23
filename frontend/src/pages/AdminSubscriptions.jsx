@@ -145,6 +145,8 @@ export default function AdminSubscriptions() {
                   <thead className="table-light"><tr>
                     <th>{t('seller')}</th>
                     <th>{t('plan')}</th>
+                    <th>Sender Name</th>
+                    <th>Screenshot</th>
                     <th>{t('amount')}</th>
                     <th>{t('transactionId')}</th>
                     <th>{t('submitted')}</th>
@@ -161,6 +163,15 @@ export default function AdminSubscriptions() {
                         <td>
                           <div className="fw-semibold small">{s.plan?.name || s.plan_name}</div>
                           <div className="text-muted" style={{ fontSize: 12 }}>{s.plan?.duration_display}</div>
+                        </td>
+                        <td className="small">{s.sender_name || <span className="text-muted">—</span>}</td>
+                        <td>
+                          {s.payment_screenshot
+                            ? <a href={s.payment_screenshot} target="_blank" rel="noreferrer">
+                                <img src={s.payment_screenshot} alt="screenshot"
+                                  style={{ height: 48, width: 64, objectFit: 'cover', borderRadius: 4, border: '1px solid #dee2e6', cursor: 'pointer' }} />
+                              </a>
+                            : <span className="text-muted small">—</span>}
                         </td>
                         <td className="fw-bold text-primary">ETB {s.amount_paid}</td>
                         <td style={{ minWidth: 200 }}>

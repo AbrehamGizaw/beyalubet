@@ -70,6 +70,8 @@ class SellerSubscription(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     is_active = models.BooleanField(default=False)
     transaction_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    sender_name = models.CharField(max_length=150, blank=True, default='')
+    payment_screenshot = models.ImageField(upload_to='subscription_screenshots/', null=True, blank=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
 

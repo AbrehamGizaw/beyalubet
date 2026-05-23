@@ -47,6 +47,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'password': 'Passwords do not match.'})
         if attrs.get('role') == 'admin':
             raise serializers.ValidationError({'role': 'Cannot self-register as admin.'})
+        email = attrs.get('email', '').strip().lower()
+        if email and User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError({'email': 'An account with this email already exists.'})
+        phone = (attrs.get('phone') or '').strip() or None
+        if phone and User.objects.filter(phone=phone).exists():
+            raise serializers.ValidationError({'phone': 'An account with this phone number already exists.'})
+        attrs['email'] = email
+        attrs['phone'] = phone
         return attrs
 
     def create(self, validated_data):

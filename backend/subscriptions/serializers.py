@@ -27,8 +27,8 @@ class SellerSubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellerSubscription
         fields = ['id', 'plan', 'plan_name', 'duration_days', 'status', 'status_display',
-                  'is_active', 'is_valid', 'transaction_id', 'amount_paid',
-                  'start_date', 'end_date', 'days_remaining', 'created_at']
+                  'is_active', 'is_valid', 'transaction_id', 'sender_name', 'payment_screenshot',
+                  'amount_paid', 'start_date', 'end_date', 'days_remaining', 'created_at']
         read_only_fields = ['status', 'is_active', 'start_date', 'end_date', 'amount_paid']
 
     def get_duration_days(self, obj):

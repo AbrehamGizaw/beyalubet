@@ -8,25 +8,45 @@ export default function Subscribe() {
   const { planId } = useParams()
   const navigate = useNavigate()
   const { t } = useLanguage()
-  const [data, setData] = useState(null)
+  const [plan, setPlan] = useState(null)
+  const [platform, setPlatform] = useState({})
+  const [activeSub, setActiveSub] = useState(null)
+  const [pendingSub, setPendingSub] = useState(null)
   const [loading, setLoading] = useState(true)
   const [ref, setRef] = useState('')
+  const [senderName, setSenderName] = useState('')
+  const [screenshot, setScreenshot] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState(null)
 
   useEffect(() => {
-    api.get('/subscriptions/my/').then(r => setData(r.data)).finally(() => setLoading(false))
-  }, [])
-
-  const plan = data?.plans?.find(p => p.id === parseInt(planId))
-  const platform = data?.platform_info || {}
+    const id = parseInt(planId)
+    Promise.all([
+      api.get('/subscriptions/plans/').catch(() => ({ data: [] })),
+      api.get('/subscriptions/my/').catch(() => ({ data: null })),
+    ]).then(([plansRes, myRes]) => {
+      const found = plansRes.data?.find ? plansRes.data.find(p => p.id === id) : null
+      setPlan(found || null)
+      setPlatform(myRes.data?.platform_info || {})
+      setActiveSub(myRes.data?.active_subscription || null)
+      const pending = myRes.data?.subscription_history?.find(s => s.status === 'pending') || null
+      setPendingSub(pending)
+    }).finally(() => setLoading(false))
+  }, [planId])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!ref.trim()) return
+    if (!ref.trim() || !senderName.trim() || !screenshot) return
     setSubmitting(true)
     try {
-      await api.post('/subscriptions/subscribe/', { plan: planId, transaction_id: ref })
+      const formData = new FormData()
+      formData.append('plan', planId)
+      formData.append('transaction_id', ref)
+      formData.append('sender_name', senderName)
+      formData.append('payment_screenshot', screenshot)
+      await api.post('/subscriptions/subscribe/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       setMsg({ type: 'success', text: 'Subscription activated! You can now list your products.' })
       setTimeout(() => navigate('/subscriptions/my'), 2500)
     } catch (err) {
@@ -37,6 +57,25 @@ export default function Subscribe() {
   }
 
   if (loading) return <Spinner />
+
+  if (activeSub) return (
+    <div className="container py-5 text-center">
+      <i className="bi bi-check-circle-fill display-1 text-success" />
+      <h4 className="mt-3 fw-bold">You already have an active subscription</h4>
+      <p className="text-muted">Your <strong>{activeSub.plan_name}</strong> plan is active for {activeSub.days_remaining} more days.</p>
+      <Link to="/subscriptions/my" className="btn btn-primary px-4">{t('mySubscription')}</Link>
+    </div>
+  )
+
+  if (pendingSub) return (
+    <div className="container py-5 text-center">
+      <i className="bi bi-hourglass-split display-1 text-warning" />
+      <h4 className="mt-3 fw-bold">Subscription pending approval</h4>
+      <p className="text-muted">Your <strong>{pendingSub.plan_name}</strong> subscription is awaiting admin approval. Please wait.</p>
+      <Link to="/subscriptions/my" className="btn btn-warning px-4">{t('mySubscription')}</Link>
+    </div>
+  )
+
   if (!plan) return (
     <div className="container py-5 text-center">
       <h4 className="text-muted">{t('planNotFound')}</h4>
@@ -123,11 +162,27 @@ export default function Subscribe() {
             <div className="card-body p-4">
               <p className="text-muted small mb-4">{t('afterTransferEnterRef')}</p>
               <form onSubmit={handleSubmit}>
-                <div className="mb-4">
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Sender Full Name *</label>
+                  <input type="text" className="form-control form-control-lg" value={senderName}
+                    onChange={e => setSenderName(e.target.value)} placeholder="e.g. Abebe Kebede" required />
+                  <div className="form-text">Full name of the account that sent the payment</div>
+                </div>
+                <div className="mb-3">
                   <label className="form-label fw-semibold">{t('transactionReference')} *</label>
                   <input type="text" className="form-control form-control-lg" value={ref}
                     onChange={e => setRef(e.target.value)} placeholder="e.g. TXN20241234567" required />
                   <div className="form-text">{t('enterRefNote')}</div>
+                </div>
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">Payment Screenshot *</label>
+                  <input type="file" className="form-control form-control-lg" accept="image/*"
+                    onChange={e => setScreenshot(e.target.files[0])} required />
+                  <div className="form-text">Upload a screenshot of your payment confirmation</div>
+                  {screenshot && (
+                    <img src={URL.createObjectURL(screenshot)} alt="preview"
+                      className="mt-2 rounded border" style={{ maxHeight: 180, maxWidth: '100%', objectFit: 'contain' }} />
+                  )}
                 </div>
                 <button type="submit" className="btn btn-success w-100 btn-lg" disabled={submitting}>
                   {submitting
