@@ -315,7 +315,7 @@ def send_subscription_submitted(subscription):
         _p(f"Hi <strong>{name}</strong>,") +
         _p(f"We've received your subscription request for the "
            f"<strong>{subscription.plan.name}</strong> plan (ETB {subscription.amount_paid}).") +
-        _p(f"Payment reference: <strong>{subscription.payment_reference}</strong>") +
+        _p(f"Transaction ID: <strong>{subscription.transaction_id}</strong>") +
         _p("Our team will review and activate your subscription shortly. You'll receive a confirmation email once approved.") +
         _btn(sub_url, "View Subscription")
     )
@@ -323,7 +323,7 @@ def send_subscription_submitted(subscription):
         seller.email,
         "Beyalubet — Subscription request received",
         html,
-        f"Subscription request received for {subscription.plan.name}. Ref: {subscription.payment_reference}"
+        f"Subscription request received for {subscription.plan.name}. Ref: {subscription.transaction_id}"
     )
 
     # Notify admin
@@ -334,14 +334,14 @@ def send_subscription_submitted(subscription):
             "New subscription request",
             _p(f"<strong>{name}</strong> ({seller.email}) has submitted a subscription request.") +
             _p(f"Plan: <strong>{subscription.plan.name}</strong> — ETB {subscription.amount_paid}") +
-            _p(f"Payment reference: <strong>{subscription.payment_reference}</strong>") +
+            _p(f"Transaction ID: <strong>{subscription.transaction_id}</strong>") +
             _btn(_frontend("/admin/subscriptions"), "Review in Admin Panel")
         )
         _send(
             admin.email,
             f"Beyalubet — New subscription from {name}",
             admin_html,
-            f"New subscription from {name}. Plan: {subscription.plan.name}. Ref: {subscription.payment_reference}"
+            f"New subscription from {name}. Plan: {subscription.plan.name}. Ref: {subscription.transaction_id}"
         )
 
 

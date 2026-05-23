@@ -114,12 +114,12 @@ export default function Footer() {
               </li>
               <li className="d-flex align-items-center gap-2 mb-3">
                 <i className="bi bi-telephone-fill text-warning" style={{ fontSize: 15, flexShrink: 0 }} />
-                <a href="tel:+251911275176"
+                <a href="tel:+251982013785"
                   className="text-decoration-none"
                   style={{ color: '#8899aa', fontSize: 14 }}
                   onMouseEnter={e => e.currentTarget.style.color = '#4d9fff'}
                   onMouseLeave={e => e.currentTarget.style.color = '#8899aa'}>
-                  0911 275 176
+                  0982 013 785
                 </a>
               </li>
               <li className="d-flex align-items-center gap-2">

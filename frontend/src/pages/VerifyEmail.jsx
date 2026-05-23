@@ -3,16 +3,22 @@ import { Link, useParams } from 'react-router-dom'
 import api from '../api/axios'
 import Spinner from '../components/Spinner'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 
 export default function VerifyEmail() {
   const { uid, token } = useParams()
   const { t } = useLanguage()
+  const { refreshUser, isAuthenticated } = useAuth()
   const [status, setStatus] = useState('loading') // loading | success | error
   const [message, setMessage] = useState('')
 
   useEffect(() => {
     api.post('/auth/verify-email/', { uid, token })
-      .then(r => { setStatus('success'); setMessage(r.data.detail) })
+      .then(r => {
+        setStatus('success')
+        setMessage(r.data.detail)
+        if (isAuthenticated) refreshUser()
+      })
       .catch(e => { setStatus('error'); setMessage(e.response?.data?.detail || t('invalidResetLink')) })
   }, [uid, token])
 
