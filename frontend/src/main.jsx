@@ -10,8 +10,9 @@ import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { LanguageProvider } from './context/LanguageContext'
 
-// Apply persisted theme before first render
-const savedTheme = localStorage.getItem('akshop_theme') || 'light'
+// Only apply saved theme if user is logged in, otherwise always light
+const isLoggedIn = !!localStorage.getItem('access')
+const savedTheme = isLoggedIn ? (localStorage.getItem('akshop_theme') || 'light') : 'light'
 document.documentElement.setAttribute('data-bs-theme', savedTheme)
 
 ReactDOM.createRoot(document.getElementById('root')).render(

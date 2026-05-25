@@ -33,6 +33,9 @@ export function AuthProvider({ children }) {
     const me = await api.get('/auth/me/')
     localStorage.setItem('user', JSON.stringify(me.data))
     setUser(me.data)
+    // Restore saved theme for this user
+    const savedTheme = localStorage.getItem('akshop_theme') || 'light'
+    document.documentElement.setAttribute('data-bs-theme', savedTheme)
     return me.data
   }
 
@@ -50,6 +53,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('refresh')
     localStorage.removeItem('user')
     setUser(null)
+    // Always reset to light theme on logout
+    document.documentElement.setAttribute('data-bs-theme', 'light')
   }
 
   const refreshUser = async () => {

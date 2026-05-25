@@ -57,21 +57,36 @@ class SubscribeAPIView(APIView):
             return Response({'detail': 'You already have a pending subscription awaiting admin approval.'}, status=400)
 
         plan_id = request.data.get('plan') or request.data.get('plan_id')
+        if not plan_id:
+            return Response({'detail': 'plan is required.'}, status=400)
+
+        plan = get_object_or_404(SubscriptionPlan, pk=plan_id, is_active=True)
+
+        # ── Free plan: auto-activate, no payment needed ────────────────
+        if plan.is_free:
+            if SellerSubscription.objects.filter(seller=request.user, plan__is_free=True).exists():
+                return Response({'detail': 'You have already used your free trial.'}, status=400)
+            sub = SellerSubscription.objects.create(
+                seller=request.user,
+                plan=plan,
+                amount_paid=0,
+                status='pending',
+                is_active=False,
+            )
+            sub.activate()
+            return Response(SellerSubscriptionSerializer(sub).data, status=201)
+
+        # ── Paid plan: require payment details ─────────────────────────
         txn_id = (request.data.get('transaction_id') or '').strip() or None
         sender_name = (request.data.get('sender_name') or '').strip()
         screenshot = request.FILES.get('payment_screenshot')
-        if not plan_id:
-            return Response({'detail': 'plan is required.'}, status=400)
         if not txn_id:
             return Response({'detail': 'transaction_id is required.'}, status=400)
         if not sender_name:
             return Response({'detail': 'sender_name is required.'}, status=400)
-        if not screenshot:
-            return Response({'detail': 'payment_screenshot is required.'}, status=400)
         if SellerSubscription.objects.filter(transaction_id=txn_id).exists():
             return Response({'detail': 'This transaction ID is already in use.'}, status=400)
 
-        plan = get_object_or_404(SubscriptionPlan, pk=plan_id, is_active=True)
         sub = SellerSubscription.objects.create(
             seller=request.user,
             plan=plan,

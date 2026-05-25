@@ -10,7 +10,7 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
         model = SubscriptionPlan
         fields = ['id', 'name', 'duration', 'duration_display', 'price',
                   'description', 'max_products', 'features', 'features_list',
-                  'is_popular', 'is_active']
+                  'is_popular', 'is_active', 'is_free']
 
     def get_features_list(self, obj):
         return obj.get_features_list()

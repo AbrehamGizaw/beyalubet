@@ -36,6 +36,13 @@ export default function SubscriptionPlans() {
       <div className="text-center mb-5">
         <h2 className="fw-bold">{t('sellerSubPlans')}</h2>
         <p className="text-muted lead">{t('choosePlan')}</p>
+
+        {/* Free trial notice */}
+        <div className="alert alert-success d-inline-flex align-items-center gap-2 px-4 py-2 mb-3">
+          <i className="bi bi-gift-fill fs-5" />
+          <span><strong>New sellers:</strong> Start with a free 1-month trial — no payment required!</span>
+        </div>
+
         {activeSub && (
           <div className="alert alert-success d-inline-block px-4 py-2">
             <i className="bi bi-check-circle-fill me-2" />
@@ -64,8 +71,11 @@ export default function SubscriptionPlans() {
                       <i className={`bi bi-${durationIcon[plan.duration] || 'calendar'} fs-3 text-${color}`} />
                     </div>
                     <h5 className="fw-bold">{plan.name}</h5>
-                    <div className={`display-5 fw-bold text-${color}`}>ETB {plan.price}</div>
+                    {plan.is_free
+                      ? <div className="display-5 fw-bold text-success">FREE</div>
+                      : <div className={`display-5 fw-bold text-${color}`}>ETB {plan.price}</div>}
                     <div className="text-muted small">{plan.duration_display}</div>
+                    {plan.is_free && <span className="badge bg-success mt-1">New sellers only</span>}
                   </div>
 
                   <div className="mb-4 flex-grow-1">

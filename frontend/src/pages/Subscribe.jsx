@@ -36,7 +36,7 @@ export default function Subscribe() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!ref.trim() || !senderName.trim() || !screenshot) return
+    if (!ref.trim() || !senderName.trim()) return
     setSubmitting(true)
     try {
       const formData = new FormData()
@@ -91,8 +91,6 @@ export default function Subscribe() {
         </Link>
         <h3 className="fw-bold mb-0">{t('subscribe')} — {plan.name}</h3>
       </div>
-
-      {msg && <div className={`alert alert-${msg.type} mb-4`}>{msg.text}</div>}
 
       <div className="row g-4">
         <div className="col-lg-6">
@@ -157,44 +155,60 @@ export default function Subscribe() {
         <div className="col-lg-6">
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-transparent fw-bold py-3">
-              <i className="bi bi-send-check me-2" />{t('submitPaymentRef')}
+              <i className="bi bi-send-check me-2" />
+              {plan.is_free ? 'Activate Free Trial' : t('submitPaymentRef')}
             </div>
             <div className="card-body p-4">
-              <p className="text-muted small mb-4">{t('afterTransferEnterRef')}</p>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">Sender Full Name *</label>
-                  <input type="text" className="form-control form-control-lg" value={senderName}
-                    onChange={e => setSenderName(e.target.value)} placeholder="e.g. Abebe Kebede" required />
-                  <div className="form-text">Full name of the account that sent the payment</div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">{t('transactionReference')} *</label>
-                  <input type="text" className="form-control form-control-lg" value={ref}
-                    onChange={e => setRef(e.target.value)} placeholder="e.g. TXN20241234567" required />
-                  <div className="form-text">{t('enterRefNote')}</div>
-                </div>
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">Payment Screenshot *</label>
-                  <input type="file" className="form-control form-control-lg" accept="image/*"
-                    onChange={e => setScreenshot(e.target.files[0])} required />
-                  <div className="form-text">Upload a screenshot of your payment confirmation</div>
-                  {screenshot && (
-                    <img src={URL.createObjectURL(screenshot)} alt="preview"
-                      className="mt-2 rounded border" style={{ maxHeight: 180, maxWidth: '100%', objectFit: 'contain' }} />
-                  )}
-                </div>
-                <button type="submit" className="btn btn-success w-100 btn-lg" disabled={submitting}>
-                  {submitting
-                    ? <><span className="spinner-border spinner-border-sm me-2" />{t('activating')}</>
-                    : <><i className="bi bi-check-circle me-2" />{t('confirmActivate')}</>}
-                </button>
-              </form>
-
-              <div className="alert alert-info small mt-4 mb-0">
-                <i className="bi bi-info-circle me-1" />
-                <strong>Demo mode:</strong> Subscription activates immediately upon reference submission.
-              </div>
+              {plan.is_free ? (
+                <>
+                  <div className="text-center py-3 mb-4">
+                    <i className="bi bi-gift display-4 text-success" />
+                    <h5 className="mt-3 fw-bold">1 Month Free — No Payment Needed</h5>
+                    <p className="text-muted">Your account will be activated instantly. You can list up to 30 products for 30 days.</p>
+                  </div>
+                  {msg && <div className={`alert alert-${msg.type} mb-3`}>{msg.text}</div>}
+                  <button className="btn btn-success w-100 btn-lg" onClick={handleSubmit} disabled={submitting}>
+                    {submitting
+                      ? <><span className="spinner-border spinner-border-sm me-2" />Activating…</>
+                      : <><i className="bi bi-check-circle me-2" />Activate Free Trial</>}
+                  </button>
+                  <p className="text-muted small text-center mt-3 mb-0">One-time offer — each seller gets one free trial only.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted small mb-4">{t('afterTransferEnterRef')}</p>
+                  {msg && <div className={`alert alert-${msg.type} mb-3`}>{msg.text}</div>}
+                  <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Sender Full Name *</label>
+                      <input type="text" className="form-control form-control-lg" value={senderName}
+                        onChange={e => setSenderName(e.target.value)} placeholder="e.g. Abebe Kebede" required />
+                      <div className="form-text">Full name of the account that sent the payment</div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">{t('transactionReference')} *</label>
+                      <input type="text" className="form-control form-control-lg" value={ref}
+                        onChange={e => setRef(e.target.value)} placeholder="e.g. TXN20241234567" required />
+                      <div className="form-text">{t('enterRefNote')}</div>
+                    </div>
+                    <div className="mb-4">
+                      <label className="form-label fw-semibold">Payment Screenshot <span className="text-muted fw-normal">(optional)</span></label>
+                      <input type="file" className="form-control form-control-lg" accept="image/*"
+                        onChange={e => setScreenshot(e.target.files[0])} />
+                      <div className="form-text">Upload a screenshot of your payment confirmation</div>
+                      {screenshot && (
+                        <img src={URL.createObjectURL(screenshot)} alt="preview"
+                          className="mt-2 rounded border" style={{ maxHeight: 180, maxWidth: '100%', objectFit: 'contain' }} />
+                      )}
+                    </div>
+                    <button type="submit" className="btn btn-success w-100 btn-lg" disabled={submitting}>
+                      {submitting
+                        ? <><span className="spinner-border spinner-border-sm me-2" />{t('activating')}</>
+                        : <><i className="bi bi-check-circle me-2" />{t('confirmActivate')}</>}
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
           </div>
         </div>

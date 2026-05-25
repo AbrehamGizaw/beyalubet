@@ -38,6 +38,7 @@ class SubscriptionPlan(models.Model):
     features = models.TextField(blank=True, help_text='One feature per line')
     is_active = models.BooleanField(default=True)
     is_popular = models.BooleanField(default=False)
+    is_free = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def get_duration_days(self):
