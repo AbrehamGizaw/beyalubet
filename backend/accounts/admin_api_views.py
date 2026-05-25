@@ -175,14 +175,38 @@ class AdminSubscriptionPlanAPIView(APIView):
         plans = SubscriptionPlan.objects.all().order_by('price')
         return Response(SubscriptionPlanSerializer(plans, many=True).data)
 
+    def post(self, request):
+        required = ['name', 'duration', 'price', 'max_products']
+        for f in required:
+            if request.data.get(f) in [None, '']:
+                return Response({'detail': f'{f} is required.'}, status=400)
+        plan = SubscriptionPlan.objects.create(
+            name=request.data['name'],
+            duration=request.data['duration'],
+            price=request.data['price'],
+            max_products=request.data['max_products'],
+            features=request.data.get('features', ''),
+            is_active=request.data.get('is_active', True),
+            is_popular=request.data.get('is_popular', False),
+            is_free=request.data.get('is_free', False),
+        )
+        return Response(SubscriptionPlanSerializer(plan).data, status=201)
+
     def patch(self, request, pk):
         plan = get_object_or_404(SubscriptionPlan, pk=pk)
-        allowed = ['price', 'name', 'max_products', 'features', 'is_active', 'is_popular']
+        allowed = ['price', 'name', 'max_products', 'features', 'is_active', 'is_popular', 'is_free', 'duration']
         for field in allowed:
             if field in request.data:
                 setattr(plan, field, request.data[field])
         plan.save()
         return Response(SubscriptionPlanSerializer(plan).data)
+
+    def delete(self, request, pk):
+        plan = get_object_or_404(SubscriptionPlan, pk=pk)
+        if plan.sellersubscription_set.filter(is_active=True).exists():
+            return Response({'detail': 'Cannot delete a plan with active subscribers.'}, status=400)
+        plan.delete()
+        return Response(status=204)
 
 
 # ── Reports ──────────────────────────────────────────────────────────────────

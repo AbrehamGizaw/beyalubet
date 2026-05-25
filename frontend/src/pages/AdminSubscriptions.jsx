@@ -20,9 +20,16 @@ export default function AdminSubscriptions() {
   const [txnEdit, setTxnEdit] = useState(null)
   const [txnSaving, setTxnSaving] = useState(false)
 
-  // inline plan edit state: { id, price, name, max_products, features }
+  // inline plan edit state: { id, price, name, max_products, features, duration, is_free }
   const [planEdit, setPlanEdit] = useState(null)
   const [planSaving, setPlanSaving] = useState(false)
+  const [planDeleting, setPlanDeleting] = useState(null)
+
+  // new plan form
+  const BLANK_PLAN = { name: '', duration: 'monthly', price: '', max_products: 50, features: '', is_free: false, is_popular: false }
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newPlan, setNewPlan] = useState(BLANK_PLAN)
+  const [addSaving, setAddSaving] = useState(false)
 
   const flash = (type, text) => {
     setMsg({ type, text })
@@ -38,7 +45,7 @@ export default function AdminSubscriptions() {
 
   const loadPlans = () => {
     setPlansLoading(true)
-    api.get('/subscriptions/plans/')
+    api.get('/admin/plans/')
       .then(r => setPlans(r.data))
       .catch(err => flash('danger', err.response?.data?.detail || 'Failed to load plans.'))
       .finally(() => setPlansLoading(false))
@@ -79,11 +86,10 @@ export default function AdminSubscriptions() {
     if (!planEdit) return
     setPlanSaving(true)
     try {
-      const res = await api.patch(`/subscriptions/plans/${planEdit.id}/`, {
-        price: planEdit.price,
-        name: planEdit.name,
-        max_products: planEdit.max_products,
-        features: planEdit.features,
+      const res = await api.patch(`/admin/plans/${planEdit.id}/`, {
+        price: planEdit.price, name: planEdit.name,
+        max_products: planEdit.max_products, features: planEdit.features,
+        duration: planEdit.duration, is_free: planEdit.is_free, is_popular: planEdit.is_popular,
       })
       setPlans(prev => prev.map(p => p.id === planEdit.id ? res.data : p))
       flash('success', t('planUpdated'))
@@ -92,6 +98,45 @@ export default function AdminSubscriptions() {
       flash('danger', err.response?.data?.detail || 'Failed to save plan.')
     } finally {
       setPlanSaving(false)
+    }
+  }
+
+  const togglePlanActive = async (plan) => {
+    try {
+      const res = await api.patch(`/admin/plans/${plan.id}/`, { is_active: !plan.is_active })
+      setPlans(prev => prev.map(p => p.id === plan.id ? res.data : p))
+      flash('success', res.data.is_active ? 'Plan is now visible.' : 'Plan hidden from sellers.')
+    } catch (err) {
+      flash('danger', err.response?.data?.detail || 'Failed to update plan.')
+    }
+  }
+
+  const deletePlan = async (plan) => {
+    if (!window.confirm(`Delete "${plan.name}"? This cannot be undone.`)) return
+    setPlanDeleting(plan.id)
+    try {
+      await api.delete(`/admin/plans/${plan.id}/`)
+      setPlans(prev => prev.filter(p => p.id !== plan.id))
+      flash('success', 'Plan deleted.')
+    } catch (err) {
+      flash('danger', err.response?.data?.detail || 'Failed to delete plan.')
+    } finally {
+      setPlanDeleting(null)
+    }
+  }
+
+  const addPlan = async () => {
+    setAddSaving(true)
+    try {
+      const res = await api.post('/admin/plans/', newPlan)
+      setPlans(prev => [...prev, res.data])
+      flash('success', 'Plan created.')
+      setShowAddForm(false)
+      setNewPlan(BLANK_PLAN)
+    } catch (err) {
+      flash('danger', err.response?.data?.detail || 'Failed to create plan.')
+    } finally {
+      setAddSaving(false)
     }
   }
 
@@ -242,71 +287,177 @@ export default function AdminSubscriptions() {
       {/* ── Plans tab ─────────────────────────────────────── */}
       {tab === 'plans' && (
         <>
-          <p className="text-muted mb-4">{t('planPricing')} — {t('editPlan')}</p>
+          <div className="d-flex align-items-center justify-content-between mb-4">
+            <p className="text-muted mb-0">Manage subscription plans — add, edit, hide or delete.</p>
+            <button className="btn btn-primary btn-sm" onClick={() => { setShowAddForm(v => !v); setPlanEdit(null) }}>
+              <i className={`bi bi-${showAddForm ? 'x-lg' : 'plus-lg'} me-1`} />
+              {showAddForm ? 'Cancel' : 'Add Plan'}
+            </button>
+          </div>
+
+          {/* ── Add new plan form ── */}
+          {showAddForm && (
+            <div className="card border-0 shadow-sm mb-4 border-start border-4 border-primary">
+              <div className="card-header bg-primary bg-opacity-10 fw-bold py-3">
+                <i className="bi bi-plus-circle me-2 text-primary" />New Subscription Plan
+              </div>
+              <div className="card-body">
+                <div className="row g-3">
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold small">Plan Name *</label>
+                    <input className="form-control form-control-sm" value={newPlan.name}
+                      onChange={e => setNewPlan(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Gold" />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold small">Duration *</label>
+                    <select className="form-select form-select-sm" value={newPlan.duration}
+                      onChange={e => setNewPlan(p => ({ ...p, duration: e.target.value }))}>
+                      <option value="monthly">Monthly (1 Month)</option>
+                      <option value="quarterly">Quarterly (3 Months)</option>
+                      <option value="biannual">Biannual (6 Months)</option>
+                      <option value="yearly">Yearly (12 Months)</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label fw-semibold small">Price (ETB) *</label>
+                    <input type="number" min="0" step="0.01" className="form-control form-control-sm" value={newPlan.price}
+                      onChange={e => setNewPlan(p => ({ ...p, price: e.target.value }))} placeholder="0" />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label fw-semibold small">Max Products *</label>
+                    <input type="number" min="1" className="form-control form-control-sm" value={newPlan.max_products}
+                      onChange={e => setNewPlan(p => ({ ...p, max_products: e.target.value }))} />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-semibold small">Features (one per line)</label>
+                    <textarea className="form-control form-control-sm" rows={3} value={newPlan.features}
+                      onChange={e => setNewPlan(p => ({ ...p, features: e.target.value }))} placeholder="Feature 1&#10;Feature 2" />
+                  </div>
+                  <div className="col-12 d-flex gap-3">
+                    <div className="form-check">
+                      <input className="form-check-input" type="checkbox" id="newIsFree" checked={newPlan.is_free}
+                        onChange={e => setNewPlan(p => ({ ...p, is_free: e.target.checked, price: e.target.checked ? 0 : p.price }))} />
+                      <label className="form-check-label small" htmlFor="newIsFree">Free plan (auto-activates)</label>
+                    </div>
+                    <div className="form-check">
+                      <input className="form-check-input" type="checkbox" id="newIsPopular" checked={newPlan.is_popular}
+                        onChange={e => setNewPlan(p => ({ ...p, is_popular: e.target.checked }))} />
+                      <label className="form-check-label small" htmlFor="newIsPopular">Mark as Popular</label>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <button className="btn btn-primary btn-sm" onClick={addPlan} disabled={addSaving}>
+                    {addSaving ? <><span className="spinner-border spinner-border-sm me-1" />Creating…</> : <><i className="bi bi-check-lg me-1" />Create Plan</>}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {plansLoading ? <Spinner /> : plans.length === 0 ? (
             <div className="text-center py-5 text-muted">
               <i className="bi bi-star display-1" />
-              <p className="mt-3">No plans found. Try refreshing.</p>
+              <p className="mt-3">No plans found.</p>
               <button className="btn btn-outline-primary btn-sm" onClick={loadPlans}>Retry</button>
             </div>
           ) : (
             <div className="row g-4">
               {plans.map(plan => (
                 <div className="col-md-6" key={plan.id}>
-                  <div className="card border-0 shadow-sm h-100">
-                    <div className="card-header bg-transparent d-flex align-items-center justify-content-between py-3">
+                  <div className={`card border-0 shadow-sm h-100 ${!plan.is_active ? 'opacity-50' : ''}`}>
+                    <div className="card-header bg-transparent d-flex align-items-center justify-content-between py-3 flex-wrap gap-2">
                       <span className="fw-bold">
                         {plan.name}
                         <span className="badge bg-secondary ms-2 fw-normal small">{plan.duration_display}</span>
                         {plan.is_popular && <span className="badge bg-warning text-dark ms-1 fw-normal small">Popular</span>}
+                        {plan.is_free && <span className="badge bg-success ms-1 fw-normal small">Free</span>}
+                        {!plan.is_active && <span className="badge bg-danger ms-1 fw-normal small">Hidden</span>}
                       </span>
                       {planEdit?.id !== plan.id && (
-                        <button className="btn btn-sm btn-outline-primary"
-                          onClick={() => setPlanEdit({ id: plan.id, price: plan.price, name: plan.name, max_products: plan.max_products, features: plan.features })}>
-                          <i className="bi bi-pencil me-1" />{t('editPlan')}
-                        </button>
+                        <div className="d-flex gap-1">
+                          <button className="btn btn-sm btn-outline-primary" title="Edit"
+                            onClick={() => { setPlanEdit({ id: plan.id, price: plan.price, name: plan.name, max_products: plan.max_products, features: plan.features, duration: plan.duration, is_free: plan.is_free, is_popular: plan.is_popular }); setShowAddForm(false) }}>
+                            <i className="bi bi-pencil" />
+                          </button>
+                          <button className={`btn btn-sm ${plan.is_active ? 'btn-outline-secondary' : 'btn-outline-success'}`}
+                            title={plan.is_active ? 'Hide plan' : 'Show plan'}
+                            onClick={() => togglePlanActive(plan)}>
+                            <i className={`bi bi-eye${plan.is_active ? '-slash' : ''}`} />
+                          </button>
+                          <button className="btn btn-sm btn-outline-danger" title="Delete plan"
+                            disabled={planDeleting === plan.id}
+                            onClick={() => deletePlan(plan)}>
+                            {planDeleting === plan.id
+                              ? <span className="spinner-border spinner-border-sm" />
+                              : <i className="bi bi-trash" />}
+                          </button>
+                        </div>
                       )}
                     </div>
                     <div className="card-body">
                       {planEdit?.id === plan.id ? (
                         <div>
-                          <div className="mb-3">
-                            <label className="form-label fw-semibold small">Name</label>
-                            <input className="form-control form-control-sm" value={planEdit.name}
-                              onChange={e => setPlanEdit(p => ({ ...p, name: e.target.value }))} />
+                          <div className="row g-2 mb-2">
+                            <div className="col-8">
+                              <label className="form-label fw-semibold small">Name</label>
+                              <input className="form-control form-control-sm" value={planEdit.name}
+                                onChange={e => setPlanEdit(p => ({ ...p, name: e.target.value }))} />
+                            </div>
+                            <div className="col-4">
+                              <label className="form-label fw-semibold small">Duration</label>
+                              <select className="form-select form-select-sm" value={planEdit.duration}
+                                onChange={e => setPlanEdit(p => ({ ...p, duration: e.target.value }))}>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="biannual">Biannual</option>
+                                <option value="yearly">Yearly</option>
+                              </select>
+                            </div>
                           </div>
-                          <div className="mb-3">
-                            <label className="form-label fw-semibold small">{t('price')} (ETB)</label>
-                            <input type="number" step="0.01" min="0" className="form-control form-control-sm"
-                              value={planEdit.price}
-                              onChange={e => setPlanEdit(p => ({ ...p, price: e.target.value }))} />
+                          <div className="row g-2 mb-2">
+                            <div className="col-6">
+                              <label className="form-label fw-semibold small">{t('price')} (ETB)</label>
+                              <input type="number" step="0.01" min="0" className="form-control form-control-sm"
+                                value={planEdit.price} onChange={e => setPlanEdit(p => ({ ...p, price: e.target.value }))} />
+                            </div>
+                            <div className="col-6">
+                              <label className="form-label fw-semibold small">{t('maxProducts')}</label>
+                              <input type="number" min="1" className="form-control form-control-sm"
+                                value={planEdit.max_products} onChange={e => setPlanEdit(p => ({ ...p, max_products: e.target.value }))} />
+                            </div>
                           </div>
-                          <div className="mb-3">
-                            <label className="form-label fw-semibold small">{t('maxProducts')}</label>
-                            <input type="number" min="1" className="form-control form-control-sm"
-                              value={planEdit.max_products}
-                              onChange={e => setPlanEdit(p => ({ ...p, max_products: e.target.value }))} />
-                          </div>
-                          <div className="mb-3">
+                          <div className="mb-2">
                             <label className="form-label fw-semibold small">Features (one per line)</label>
-                            <textarea className="form-control form-control-sm" rows={5}
-                              value={planEdit.features}
-                              onChange={e => setPlanEdit(p => ({ ...p, features: e.target.value }))} />
+                            <textarea className="form-control form-control-sm" rows={4}
+                              value={planEdit.features} onChange={e => setPlanEdit(p => ({ ...p, features: e.target.value }))} />
+                          </div>
+                          <div className="d-flex gap-3 mb-3">
+                            <div className="form-check">
+                              <input className="form-check-input" type="checkbox" id={`isFree${plan.id}`} checked={planEdit.is_free}
+                                onChange={e => setPlanEdit(p => ({ ...p, is_free: e.target.checked }))} />
+                              <label className="form-check-label small" htmlFor={`isFree${plan.id}`}>Free plan</label>
+                            </div>
+                            <div className="form-check">
+                              <input className="form-check-input" type="checkbox" id={`isPop${plan.id}`} checked={planEdit.is_popular}
+                                onChange={e => setPlanEdit(p => ({ ...p, is_popular: e.target.checked }))} />
+                              <label className="form-check-label small" htmlFor={`isPop${plan.id}`}>Popular</label>
+                            </div>
                           </div>
                           <div className="d-flex gap-2">
                             <button className="btn btn-success btn-sm" onClick={savePlan} disabled={planSaving}>
                               {planSaving ? <><span className="spinner-border spinner-border-sm me-1" />Saving…</> : <><i className="bi bi-check-lg me-1" />{t('saveChanges')}</>}
                             </button>
-                            <button className="btn btn-outline-secondary btn-sm" onClick={() => setPlanEdit(null)}>
-                              {t('cancel')}
-                            </button>
+                            <button className="btn btn-outline-secondary btn-sm" onClick={() => setPlanEdit(null)}>{t('cancel')}</button>
                           </div>
                         </div>
                       ) : (
                         <div className="small">
                           <div className="d-flex justify-content-between mb-2">
                             <span className="text-muted">{t('price')}</span>
-                            <strong className="text-primary fs-5">ETB {plan.price}</strong>
+                            <strong className={`fs-5 ${plan.is_free ? 'text-success' : 'text-primary'}`}>
+                              {plan.is_free ? 'FREE' : `ETB ${plan.price}`}
+                            </strong>
                           </div>
                           <div className="d-flex justify-content-between mb-2">
                             <span className="text-muted">{t('maxProducts')}</span>
@@ -314,9 +465,7 @@ export default function AdminSubscriptions() {
                           </div>
                           <hr className="my-2" />
                           <ul className="mb-0 ps-3">
-                            {plan.features_list?.map((f, i) => (
-                              <li key={i} className="text-muted">{f}</li>
-                            ))}
+                            {plan.features_list?.map((f, i) => <li key={i} className="text-muted">{f}</li>)}
                           </ul>
                         </div>
                       )}
