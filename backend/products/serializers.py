@@ -132,13 +132,14 @@ class ProductCreateSerializer(serializers.ModelSerializer):
                   'stock', 'condition', 'location', 'is_active']
 
     def validate(self, attrs):
-        price = attrs.get('price')
-        original_price = attrs.get('original_price')
-        if price is None and self.instance:
-            price = self.instance.price
-        if original_price is None and self.instance:
-            original_price = self.instance.original_price
-        if original_price is not None and price is not None and original_price <= price:
+        # Only validate when original_price is explicitly included in this request
+        if 'original_price' not in attrs:
+            return attrs
+        original_price = attrs['original_price']
+        if original_price is None:
+            return attrs
+        price = attrs.get('price') or (self.instance.price if self.instance else None)
+        if price is not None and original_price <= price:
             raise serializers.ValidationError(
                 {'original_price': 'Original price must be greater than the selling price.'}
             )
