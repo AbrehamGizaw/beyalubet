@@ -46,7 +46,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'title', 'slug', 'price', 'original_price', 'discount_percentage',
-                  'stock', 'condition', 'location', 'views', 'created_at',
+                  'stock', 'condition', 'location', 'views', 'created_at', 'is_active',
                   'category', 'category_name', 'category_name_am', 'category_icon', 'category_slug',
                   'seller', 'seller_name', 'seller_business', 'seller_phone',
                   'main_image', 'is_featured', 'avg_rating', 'review_count']
@@ -130,3 +130,16 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['title', 'category', 'description', 'price', 'original_price',
                   'stock', 'condition', 'location', 'is_active']
+
+    def validate(self, attrs):
+        price = attrs.get('price')
+        original_price = attrs.get('original_price')
+        if price is None and self.instance:
+            price = self.instance.price
+        if original_price is None and self.instance:
+            original_price = self.instance.original_price
+        if original_price is not None and price is not None and original_price <= price:
+            raise serializers.ValidationError(
+                {'original_price': 'Original price must be greater than the selling price.'}
+            )
+        return attrs

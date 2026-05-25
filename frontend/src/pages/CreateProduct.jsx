@@ -35,6 +35,10 @@ export default function CreateProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+    if (form.original_price && parseFloat(form.original_price) <= parseFloat(form.price)) {
+      setError('Original price must be greater than the selling price.')
+      return
+    }
     setLoading(true)
     try {
       const fd = new FormData()
@@ -100,6 +104,7 @@ export default function CreateProduct() {
                     <input type="number" className="form-control" value={form.original_price} min="0" step="0.01"
                       onChange={e => set('original_price', e.target.value)}
                       placeholder="For discount display" />
+                    <div className="form-text">Must be higher than selling price (shows discount badge)</div>
                   </div>
                   <div className="col-sm-4">
                     <label className="form-label fw-semibold">{t('stockLabel')} *</label>

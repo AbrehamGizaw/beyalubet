@@ -89,6 +89,10 @@ export default function EditProduct() {
     e.preventDefault()
     setError(null)
     setSuccess(null)
+    if (form.original_price && parseFloat(form.original_price) <= parseFloat(form.price)) {
+      setError('Original price must be greater than the selling price.')
+      return
+    }
     setSaving(true)
     try {
       const fd = new FormData()
@@ -171,6 +175,7 @@ export default function EditProduct() {
                     <label className="form-label fw-semibold">{t('originalPriceLabel')} <span className="text-muted small">(optional)</span></label>
                     <input type="number" className="form-control" value={form.original_price} min="0" step="0.01"
                       onChange={e => set('original_price', e.target.value)} />
+                    <div className="form-text">Must be higher than selling price (shows discount badge)</div>
                   </div>
                   <div className="col-sm-4">
                     <label className="form-label fw-semibold">{t('stockLabel')} *</label>
