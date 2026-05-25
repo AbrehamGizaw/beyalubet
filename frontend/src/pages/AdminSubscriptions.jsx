@@ -12,7 +12,7 @@ export default function AdminSubscriptions() {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [plansLoading, setPlansLoading] = useState(false)
-  const [filter, setFilter] = useState('pending')
+  const [filter, setFilter] = useState('')
   const [acting, setActing] = useState(null)
   const [msg, setMsg] = useState(null)
 

@@ -5,8 +5,6 @@ import { useLanguage } from '../context/LanguageContext'
 const LANGUAGES = [
   { code: 'en', label: 'English' },
   { code: 'am', label: 'Amharic (አማርኛ)' },
-  { code: 'fr', label: 'French (Français)' },
-  { code: 'ar', label: 'Arabic (العربية)' },
 ]
 
 export default function Settings() {

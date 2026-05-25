@@ -35,8 +35,8 @@ export default function Subscribe() {
   }, [planId])
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!ref.trim() || !senderName.trim()) return
+    if (e?.preventDefault) e.preventDefault()
+    if (!plan?.is_free && (!ref.trim() || !senderName.trim())) return
     setSubmitting(true)
     try {
       const formData = new FormData()
