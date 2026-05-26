@@ -75,7 +75,9 @@ class AdminDashboardAPIView(APIView):
 class AdminUsersAPIView(APIView):
     permission_classes = [IsPlatformAdmin]
 
-    def get(self, request):
+    def get(self, request, pk=None):
+        if pk:
+            return self._user_detail(pk)
         role = request.query_params.get('role', '')
         q = request.query_params.get('q', '')
         qs = User.objects.exclude(role='admin').order_by('-date_joined')
@@ -104,6 +106,92 @@ class AdminUsersAPIView(APIView):
                 'product_count': Product.objects.filter(seller=u, is_active=True).count() if u.role == 'seller' else None,
                 'subscription_status': sub.status if sub else ('pending' if u.subscriptions.filter(status='pending').exists() else None),
             })
+        return Response(data)
+
+    def _user_detail(self, pk):
+        user = get_object_or_404(User, pk=pk)
+        data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': user.get_full_name() or user.username,
+            'phone': user.phone,
+            'role': user.role,
+            'is_active': user.is_active,
+            'is_email_verified': user.is_email_verified,
+            'date_joined': user.date_joined,
+            'profile_image': user.profile_image.url if user.profile_image else None,
+        }
+
+        if user.role == 'buyer':
+            orders = Order.objects.filter(buyer=user).prefetch_related('items').order_by('-created_at')[:20]
+            data['orders'] = [{
+                'order_number': o.order_number,
+                'status': o.status,
+                'payment_status': o.payment_status,
+                'total_amount': str(o.total_amount),
+                'created_at': o.created_at,
+                'items': [{'product_title': i.product_title, 'quantity': i.quantity, 'unit_price': str(i.unit_price)} for i in o.items.all()],
+            } for o in orders]
+            paid = Order.objects.filter(buyer=user, payment_status='paid').aggregate(t=Sum('total_amount'))['t'] or 0
+            data['stats'] = {
+                'total_orders': Order.objects.filter(buyer=user).count(),
+                'total_spent': str(paid),
+            }
+            reviews = Review.objects.filter(buyer=user).select_related('product').order_by('-created_at')[:20]
+            data['reviews'] = [{
+                'product_title': r.product.title,
+                'product_slug': r.product.slug,
+                'rating': r.rating,
+                'comment': r.comment,
+                'created_at': r.created_at,
+            } for r in reviews]
+
+        elif user.role == 'seller':
+            try:
+                sp = user.seller_profile
+                data['seller_profile'] = {
+                    'business_name': sp.business_name,
+                    'business_description': sp.business_description,
+                    'bank_name': sp.bank_name,
+                    'account_number': sp.account_number,
+                    'account_holder': sp.account_holder,
+                    'telebirr_number': sp.telebirr_number,
+                    'mobile_money': sp.mobile_money,
+                    'is_verified': sp.is_verified,
+                }
+            except Exception:
+                data['seller_profile'] = None
+            products = Product.objects.filter(seller=user).order_by('-created_at')[:20]
+            data['products'] = [{
+                'title': p.title,
+                'slug': p.slug,
+                'price': str(p.price),
+                'stock': p.stock,
+                'views': p.views,
+                'is_active': p.is_active,
+                'created_at': p.created_at,
+                'avg_rating': Review.objects.filter(product=p).aggregate(avg=Avg('rating'))['avg'],
+            } for p in products]
+            subs = SellerSubscription.objects.filter(seller=user).select_related('plan').order_by('-created_at')
+            data['subscriptions'] = [{
+                'plan_name': s.plan.name,
+                'status': s.status,
+                'start_date': s.start_date,
+                'end_date': s.end_date,
+                'amount_paid': str(s.amount_paid) if s.amount_paid else None,
+            } for s in subs]
+            revenue = OrderItem.objects.filter(seller=user, order__payment_status='paid').aggregate(t=Sum('unit_price'))['t'] or 0
+            data['stats'] = {
+                'total_products': Product.objects.filter(seller=user).count(),
+                'active_products': Product.objects.filter(seller=user, is_active=True).count(),
+                'total_revenue': str(revenue),
+                'total_orders': OrderItem.objects.filter(seller=user).values('order').distinct().count(),
+                'avg_rating': round(Review.objects.filter(product__seller=user).aggregate(avg=Avg('rating'))['avg'] or 0, 1),
+            }
+
         return Response(data)
 
     def patch(self, request, pk):

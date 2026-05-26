@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import Spinner from '../components/Spinner'
 import { useLanguage } from '../context/LanguageContext'
@@ -8,6 +9,7 @@ const SUB_COLOR = { active: 'success', pending: 'warning text-dark', cancelled: 
 
 export default function AdminUsers() {
   const { t } = useLanguage()
+  const navigate = useNavigate()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
@@ -85,7 +87,10 @@ export default function AdminUsers() {
               </tr></thead>
               <tbody>
                 {users.map(u => (
-                  <tr key={u.id} className={!u.is_active ? 'opacity-50' : ''}>
+                  <tr key={u.id}
+                    className={`${!u.is_active ? 'opacity-50' : ''}`}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/admin/users/${u.id}`)}>
                     <td>
                       <div className="fw-semibold small">{u.full_name}</div>
                       <div className="text-muted" style={{ fontSize: 12 }}>@{u.username}</div>
@@ -123,7 +128,8 @@ export default function AdminUsers() {
                       <div className="form-check form-switch mb-0">
                         <input className="form-check-input" type="checkbox"
                           checked={u.is_active} disabled={toggling === u.id}
-                          onChange={() => toggleActive(u)} />
+                          onChange={() => toggleActive(u)}
+                          onClick={e => e.stopPropagation()} />
                         <label className="form-check-label small">
                           {u.is_active ? t('active') : t('disabled')}
                         </label>

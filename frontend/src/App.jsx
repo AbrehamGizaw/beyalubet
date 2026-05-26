@@ -31,6 +31,7 @@ import BuyerReport from './pages/BuyerReport'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminSubscriptions from './pages/AdminSubscriptions'
 import AdminUsers from './pages/AdminUsers'
+import AdminUserDetail from './pages/AdminUserDetail'
 import AdminReports from './pages/AdminReports'
 import AdminReviews from './pages/AdminReviews'
 import AdminSettings from './pages/AdminSettings'
@@ -77,6 +78,7 @@ export default function App() {
           <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/subscriptions" element={<ProtectedRoute role="admin"><AdminSubscriptions /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute role="admin"><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/users/:id" element={<ProtectedRoute role="admin"><AdminUserDetail /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute role="admin"><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/reviews" element={<ProtectedRoute role="admin"><AdminReviews /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute role="admin"><AdminSettings /></ProtectedRoute>} />
