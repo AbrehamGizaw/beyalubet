@@ -14,6 +14,14 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, null=True, unique=True)
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
     is_email_verified = models.BooleanField(default=False)
+    email_notifications = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_by = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='archived_users',
+    )
+    deletion_reason = models.CharField(max_length=500, blank=True)
 
     def is_seller(self):
         return self.role == 'seller'

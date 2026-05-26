@@ -6,6 +6,7 @@ from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from datetime import timedelta
+from django.db import models as django_models
 from .models import User, SellerProfile
 from .serializers import UserSerializer
 from subscriptions.models import SellerSubscription, SubscriptionPlan, PlatformSettings
@@ -80,7 +81,7 @@ class AdminUsersAPIView(APIView):
             return self._user_detail(pk)
         role = request.query_params.get('role', '')
         q = request.query_params.get('q', '')
-        qs = User.objects.exclude(role='admin').order_by('-date_joined')
+        qs = User.objects.exclude(role='admin').filter(is_deleted=False).order_by('-date_joined')
         if role:
             qs = qs.filter(role=role)
         if q:
@@ -200,6 +201,63 @@ class AdminUsersAPIView(APIView):
             user.is_active = request.data['is_active']
             user.save(update_fields=['is_active'])
         return Response({'id': user.id, 'is_active': user.is_active})
+
+    def delete(self, request, pk):
+        user = get_object_or_404(User, pk=pk, is_deleted=False)
+        if user.role == 'admin':
+            return Response({'detail': 'Cannot archive admin users.'}, status=400)
+        reason = (request.data.get('reason') or '').strip()
+        user.is_deleted = True
+        user.deleted_at = timezone.now()
+        user.deleted_by = request.user
+        user.deletion_reason = reason
+        user.is_active = False
+        user.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by', 'deletion_reason', 'is_active'])
+        return Response({'success': True})
+
+
+# ── Archived users ────────────────────────────────────────────────────────────
+
+class AdminArchivedUsersAPIView(APIView):
+    permission_classes = [IsPlatformAdmin]
+
+    def get(self, request):
+        q = request.query_params.get('q', '')
+        qs = User.objects.filter(is_deleted=True).select_related('deleted_by').order_by('-deleted_at')
+        if q:
+            qs = qs.filter(
+                Q(username__icontains=q) | Q(email__icontains=q) |
+                Q(first_name__icontains=q) | Q(last_name__icontains=q)
+            )
+        return Response([{
+            'id': u.id,
+            'username': u.username,
+            'email': u.email,
+            'full_name': u.get_full_name() or u.username,
+            'role': u.role,
+            'phone': u.phone,
+            'date_joined': u.date_joined,
+            'deleted_at': u.deleted_at,
+            'deleted_by': u.deleted_by.username if u.deleted_by else None,
+            'deletion_reason': u.deletion_reason,
+        } for u in qs])
+
+    def patch(self, request, pk):
+        user = get_object_or_404(User, pk=pk, is_deleted=True)
+        if request.data.get('action') != 'restore':
+            return Response({'detail': 'Use action=restore.'}, status=400)
+        user.is_deleted = False
+        user.deleted_at = None
+        user.deleted_by = None
+        user.deletion_reason = ''
+        user.is_active = True
+        user.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by_id', 'deletion_reason', 'is_active'])
+        return Response({'success': True})
+
+    def delete(self, request, pk):
+        user = get_object_or_404(User, pk=pk, is_deleted=True)
+        user.delete()
+        return Response(status=204)
 
 
 # ── Subscriptions ────────────────────────────────────────────────────────────

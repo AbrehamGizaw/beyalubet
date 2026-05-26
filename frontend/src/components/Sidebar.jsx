@@ -27,6 +27,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     { to: '/admin/dashboard', icon: 'speedometer2', label: t('dashboard') },
     { to: '/admin/subscriptions', icon: 'check-circle', label: t('subscriptions'), pending: true },
     { to: '/admin/users', icon: 'people', label: t('users') },
+    { to: '/admin/archived-users', icon: 'archive', label: t('archivedUsers') },
     { to: '/admin/reviews', icon: 'chat-square-text', label: t('reviews') },
     { to: '/admin/reports', icon: 'bar-chart-line', label: t('reports') },
   ]

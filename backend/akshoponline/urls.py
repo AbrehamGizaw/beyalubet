@@ -8,9 +8,10 @@ from accounts.api_views import (
     RegisterAPIView, MeAPIView,
     ForgotPasswordAPIView, ResetPasswordAPIView,
     VerifyEmailAPIView, ResendVerificationAPIView,
+    UnsubscribeAPIView,
 )
 from accounts.admin_api_views import (
-    AdminDashboardAPIView, AdminUsersAPIView,
+    AdminDashboardAPIView, AdminUsersAPIView, AdminArchivedUsersAPIView,
     AdminSubscriptionsAPIView, AdminSubscriptionActionAPIView,
     AdminSubscriptionPlanAPIView,
     AdminReportsAPIView, AdminReviewsAPIView,
@@ -53,6 +54,7 @@ urlpatterns = [
     path('api/auth/reset-password/', ResetPasswordAPIView.as_view(), name='api_reset_password'),
     path('api/auth/verify-email/', VerifyEmailAPIView.as_view(), name='api_verify_email'),
     path('api/auth/resend-verification/', ResendVerificationAPIView.as_view(), name='api_resend_verification'),
+    path('api/unsubscribe/<str:token>/', UnsubscribeAPIView.as_view(), name='api_unsubscribe'),
 
     # Products
     path('api/products/categories/', CategoryListAPIView.as_view(), name='api_categories'),
@@ -90,6 +92,8 @@ urlpatterns = [
     path('api/admin/dashboard/', AdminDashboardAPIView.as_view(), name='api_admin_dashboard'),
     path('api/admin/users/', AdminUsersAPIView.as_view(), name='api_admin_users'),
     path('api/admin/users/<int:pk>/', AdminUsersAPIView.as_view(), name='api_admin_user_detail'),
+    path('api/admin/archived-users/', AdminArchivedUsersAPIView.as_view(), name='api_admin_archived_users'),
+    path('api/admin/archived-users/<int:pk>/', AdminArchivedUsersAPIView.as_view(), name='api_admin_archived_user_detail'),
     path('api/admin/subscriptions/', AdminSubscriptionsAPIView.as_view(), name='api_admin_subscriptions'),
     path('api/admin/subscriptions/<int:pk>/', AdminSubscriptionActionAPIView.as_view(), name='api_admin_sub_action'),
     path('api/admin/plans/', AdminSubscriptionPlanAPIView.as_view(), name='api_admin_plans'),

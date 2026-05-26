@@ -28,12 +28,25 @@ export default function AdminUserDetail() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteReason, setDeleteReason] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     api.get(`/admin/users/${id}/`)
       .then(r => setUser(r.data))
       .finally(() => setLoading(false))
   }, [id])
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      await api.delete(`/admin/users/${id}/`, { data: { reason: deleteReason } })
+      navigate('/admin/users')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const toggleActive = async () => {
     setToggling(true)
@@ -87,12 +100,16 @@ export default function AdminUserDetail() {
               </div>
               <div className="text-muted small">@{user.username}</div>
             </div>
-            <div className="d-flex align-items-center gap-2 ms-auto">
+            <div className="d-flex align-items-center gap-2 ms-auto flex-wrap">
               <span className="small text-muted">{user.is_active ? 'Active' : 'Disabled'}</span>
               <div className="form-check form-switch mb-0">
                 <input className="form-check-input" type="checkbox" role="switch"
                   checked={user.is_active} disabled={toggling} onChange={toggleActive} />
               </div>
+              <button className="btn btn-outline-danger btn-sm"
+                onClick={() => setShowDeleteModal(true)}>
+                <i className="bi bi-archive me-1" />Archive
+              </button>
             </div>
           </div>
         </div>
@@ -321,6 +338,44 @@ export default function AdminUserDetail() {
 
         </div>
       </div>
+
+      {/* Archive confirmation modal */}
+      {showDeleteModal && (
+        <div className="modal show d-block" tabIndex="-1"
+          style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title">
+                  <i className="bi bi-archive text-danger me-2" />Archive User
+                </h5>
+                <button className="btn-close" onClick={() => setShowDeleteModal(false)} />
+              </div>
+              <div className="modal-body pt-2">
+                <p className="text-muted">
+                  Are you sure you want to archive <strong>@{user.username}</strong>?
+                  They will be disabled and moved to the archive. You can restore them at any time.
+                </p>
+                <label className="form-label small fw-semibold">Reason <span className="text-muted fw-normal">(optional)</span></label>
+                <input className="form-control" value={deleteReason}
+                  onChange={e => setDeleteReason(e.target.value)}
+                  placeholder="e.g. Policy violation, spam, duplicate account…" />
+              </div>
+              <div className="modal-footer border-0 pt-0">
+                <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-danger" onClick={handleDelete} disabled={deleting}>
+                  {deleting
+                    ? <><span className="spinner-border spinner-border-sm me-1" />Archiving…</>
+                    : <><i className="bi bi-archive me-1" />Archive User</>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

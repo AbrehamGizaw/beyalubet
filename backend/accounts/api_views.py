@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
+from django.core import signing
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -169,3 +170,19 @@ class ResendVerificationAPIView(APIView):
             return Response({'detail': 'No email address on your account.'}, status=400)
         send_verification_email(user)
         return Response({'detail': 'Verification email sent.'})
+
+
+class UnsubscribeAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, token):
+        try:
+            data = signing.loads(token, salt='email-unsub', max_age=60 * 60 * 24 * 90)
+            user = User.objects.get(pk=data['uid'])
+            user.email_notifications = False
+            user.save(update_fields=['email_notifications'])
+            return Response({'success': True, 'email': user.email})
+        except signing.SignatureExpired:
+            return Response({'error': 'Unsubscribe link has expired. Please request a new email.'}, status=400)
+        except Exception:
+            return Response({'error': 'Invalid unsubscribe link.'}, status=400)

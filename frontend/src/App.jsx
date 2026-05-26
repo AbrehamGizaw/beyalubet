@@ -32,10 +32,12 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminSubscriptions from './pages/AdminSubscriptions'
 import AdminUsers from './pages/AdminUsers'
 import AdminUserDetail from './pages/AdminUserDetail'
+import AdminArchivedUsers from './pages/AdminArchivedUsers'
 import AdminReports from './pages/AdminReports'
 import AdminReviews from './pages/AdminReviews'
 import AdminSettings from './pages/AdminSettings'
 import Settings from './pages/Settings'
+import Unsubscribe from './pages/Unsubscribe'
 
 export default function App() {
   return (
@@ -50,6 +52,7 @@ export default function App() {
         <Route path="/auth/reset-password/:uid/:token" element={<ResetPassword />} />
         <Route path="/auth/verify-email/:uid/:token" element={<VerifyEmail />} />
         <Route path="/subscriptions" element={<SubscriptionPlans />} />
+        <Route path="/unsubscribe/:token" element={<Unsubscribe />} />
 
         {/* ── Dashboard pages (with sidebar / buyer topbar) ─────────── */}
         <Route element={<DashboardLayout />}>
@@ -79,6 +82,7 @@ export default function App() {
           <Route path="/admin/subscriptions" element={<ProtectedRoute role="admin"><AdminSubscriptions /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute role="admin"><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/users/:id" element={<ProtectedRoute role="admin"><AdminUserDetail /></ProtectedRoute>} />
+          <Route path="/admin/archived-users" element={<ProtectedRoute role="admin"><AdminArchivedUsers /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute role="admin"><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/reviews" element={<ProtectedRoute role="admin"><AdminReviews /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute role="admin"><AdminSettings /></ProtectedRoute>} />
