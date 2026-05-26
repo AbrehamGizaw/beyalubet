@@ -51,7 +51,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         if email and User.objects.filter(email__iexact=email).exists():
             raise serializers.ValidationError({'email': 'An account with this email already exists.'})
         phone = (attrs.get('phone') or '').strip() or None
-        if phone and User.objects.filter(phone=phone).exists():
+        if not phone:
+            raise serializers.ValidationError({'phone': 'Phone number is required.'})
+        if User.objects.filter(phone=phone).exists():
             raise serializers.ValidationError({'phone': 'An account with this phone number already exists.'})
         attrs['email'] = email
         attrs['phone'] = phone

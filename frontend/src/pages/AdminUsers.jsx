@@ -94,8 +94,14 @@ export default function AdminUsers() {
                       <span className={`badge bg-${ROLE_COLOR[u.role] || 'secondary'}`}>{u.role}</span>
                     </td>
                     <td>
-                      <div className="small text-muted">{u.email || '—'}</div>
-                      <div className="small text-muted">{u.phone || ''}</div>
+                      <div className="small d-flex align-items-center gap-1 flex-wrap">
+                        <span className="text-muted">{u.email || '—'}</span>
+                        {u.is_email_verified
+                          ? <span className="badge bg-success" style={{ fontSize: 10 }}>Verified</span>
+                          : <span className="badge bg-danger" style={{ fontSize: 10 }}>Unverified</span>
+                        }
+                      </div>
+                      <div className="small text-muted">{u.phone || '—'}</div>
                     </td>
                     <td className="small text-muted">{new Date(u.date_joined).toLocaleDateString()}</td>
                     <td className="small">

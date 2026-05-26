@@ -99,6 +99,7 @@ class AdminUsersAPIView(APIView):
                 'phone': u.phone,
                 'date_joined': u.date_joined,
                 'is_active': u.is_active,
+                'is_email_verified': u.is_email_verified,
                 'order_count': Order.objects.filter(buyer=u).count() if u.role == 'buyer' else None,
                 'product_count': Product.objects.filter(seller=u, is_active=True).count() if u.role == 'seller' else None,
                 'subscription_status': sub.status if sub else ('pending' if u.subscriptions.filter(status='pending').exists() else None),

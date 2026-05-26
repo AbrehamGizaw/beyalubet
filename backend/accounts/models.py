@@ -11,7 +11,7 @@ class User(AbstractUser):
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='buyer')
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    phone = models.CharField(max_length=20, null=True, unique=True)
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
     is_email_verified = models.BooleanField(default=False)
 
