@@ -14,6 +14,7 @@ export default function Register() {
   })
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -99,13 +100,27 @@ export default function Register() {
                   </div>
                   <div className="col-sm-6">
                     <label className="form-label fw-semibold">{t('password')} *</label>
-                    <input type="password" className="form-control" value={form.password}
-                      onChange={e => set('password', e.target.value)} required minLength={8} />
+                    <div className="input-group">
+                      <input type={showPassword ? 'text' : 'password'} className="form-control"
+                        value={form.password} onChange={e => set('password', e.target.value)}
+                        required minLength={8} />
+                      <button type="button" className="btn btn-outline-secondary"
+                        onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
+                        <i className={`bi bi-eye${showPassword ? '-slash' : ''}`} />
+                      </button>
+                    </div>
                   </div>
                   <div className="col-sm-6">
                     <label className="form-label fw-semibold">{t('confirmPassword')} *</label>
-                    <input type="password" className="form-control" value={form.password2}
-                      onChange={e => set('password2', e.target.value)} required />
+                    <div className="input-group">
+                      <input type={showPassword ? 'text' : 'password'} className="form-control"
+                        value={form.password2} onChange={e => set('password2', e.target.value)}
+                        required />
+                      <button type="button" className="btn btn-outline-secondary"
+                        onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
+                        <i className={`bi bi-eye${showPassword ? '-slash' : ''}`} />
+                      </button>
+                    </div>
                   </div>
                 </div>
 

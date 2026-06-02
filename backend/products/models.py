@@ -21,6 +21,7 @@ class Category(models.Model):
 class Product(models.Model):
     CONDITION_CHOICES = [
         ('new', 'Brand New'),
+        ('slightly_used', 'Slightly Used'),
         ('used', 'Used'),
         ('refurbished', 'Refurbished'),
     ]
@@ -37,6 +38,7 @@ class Product(models.Model):
     original_price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     stock = models.PositiveIntegerField(default=1)
     condition = models.CharField(max_length=15, choices=CONDITION_CHOICES, default='new')
+    brand = models.CharField(max_length=100, blank=True)
     location = models.CharField(max_length=200, blank=True)
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
@@ -80,6 +82,7 @@ class Review(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        unique_together = (('buyer', 'product'),)
 
     def __str__(self):
         return f'{self.buyer.username} → {self.product.title} ({self.rating}★)'

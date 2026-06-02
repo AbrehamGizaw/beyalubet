@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { Link, useNavigate, Navigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import ProductCard from '../components/ProductCard'
 import Spinner from '../components/Spinner'
@@ -9,7 +9,6 @@ import { useLanguage } from '../context/LanguageContext'
 export default function Home() {
   const { isAuthenticated } = useAuth()
   const { t, lang } = useLanguage()
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />
   const [categories, setCategories] = useState([])
   const [featured, setFeatured] = useState([])
   const [latest, setLatest] = useState([])

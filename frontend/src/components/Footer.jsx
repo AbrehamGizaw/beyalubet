@@ -104,22 +104,22 @@ export default function Footer() {
               </li>
               <li className="d-flex align-items-center gap-2 mb-3">
                 <i className="bi bi-envelope-fill text-warning" style={{ fontSize: 15, flexShrink: 0 }} />
-                <a href="mailto:akonlineshop@gmail.com"
+                <a href="mailto:beyalubet@gmail.com"
                   className="text-decoration-none"
                   style={{ color: '#8899aa', fontSize: 14 }}
                   onMouseEnter={e => e.currentTarget.style.color = '#4d9fff'}
                   onMouseLeave={e => e.currentTarget.style.color = '#8899aa'}>
-                  akonlineshop@gmail.com
+                  beyalubet@gmail.com
                 </a>
               </li>
               <li className="d-flex align-items-center gap-2 mb-3">
                 <i className="bi bi-telephone-fill text-warning" style={{ fontSize: 15, flexShrink: 0 }} />
-                <a href="tel:+251982013785"
+                <a href="tel:+251927318237"
                   className="text-decoration-none"
                   style={{ color: '#8899aa', fontSize: 14 }}
                   onMouseEnter={e => e.currentTarget.style.color = '#4d9fff'}
                   onMouseLeave={e => e.currentTarget.style.color = '#8899aa'}>
-                  0982 013 785
+                  +251 92 731 8237
                 </a>
               </li>
               <li className="d-flex align-items-center gap-2">

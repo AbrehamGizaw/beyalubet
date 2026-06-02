@@ -26,8 +26,6 @@ class AddToCartAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        if not request.user.is_buyer():
-            return Response({'detail': 'Only buyers can add to cart.'}, status=403)
         product_id = request.data.get('product_id')
         qty = int(request.data.get('quantity', 1))
         product = get_object_or_404(Product, pk=product_id, is_active=True)
@@ -76,8 +74,8 @@ class CheckoutAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        if not request.user.is_buyer():
-            return Response({'detail': 'Only buyers can checkout.'}, status=403)
+        if not request.user.is_email_verified:
+            return Response({'detail': 'Please verify your email address before placing an order.'}, status=403)
 
         try:
             cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -231,6 +229,8 @@ class SellerPaymentApprovalAPIView(APIView):
         order = get_object_or_404(Order, pk=pk)
         if not order.items.filter(seller=request.user).exists():
             return Response({'detail': 'Not authorized.'}, status=403)
+        if order.payment_status == 'paid':
+            return Response({'detail': 'Payment is already confirmed and cannot be changed.'}, status=400)
         action = request.data.get('action')
         if action == 'approve':
             order.payment_status = 'paid'

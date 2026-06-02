@@ -83,10 +83,20 @@ class SellerSubscription(models.Model):
         self.status = 'active'
         self.is_active = True
         self.save()
-        # Deactivate other subscriptions for this seller
+        # Deactivate other subscriptions for this user
         SellerSubscription.objects.filter(
             seller=self.seller, is_active=True
         ).exclude(pk=self.pk).update(is_active=False, status='cancelled')
+        # Upgrade buyer → seller on first approved subscription
+        user = self.seller
+        if user.role == 'buyer':
+            user.role = 'seller'
+            user.save(update_fields=['role'])
+            from accounts.models import SellerProfile
+            SellerProfile.objects.get_or_create(
+                user=user,
+                defaults={'business_name': f"{user.first_name or user.username}'s Store"},
+            )
 
     @property
     def is_valid(self):

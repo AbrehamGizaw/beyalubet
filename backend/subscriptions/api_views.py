@@ -48,8 +48,8 @@ class SubscribeAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        if not request.user.is_seller():
-            return Response({'detail': 'Only sellers can subscribe.'}, status=403)
+        if request.user.role == 'admin':
+            return Response({'detail': 'Admin accounts cannot subscribe to seller plans.'}, status=403)
 
         if SellerSubscription.objects.filter(seller=request.user, is_active=True).exists():
             return Response({'detail': 'You already have an active subscription. Wait for it to expire before subscribing again.'}, status=400)
@@ -122,8 +122,6 @@ class MySubscriptionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_seller():
-            return Response({'detail': 'Sellers only.'}, status=403)
         subs = SellerSubscription.objects.filter(
             seller=request.user
         ).select_related('plan').order_by('-created_at')

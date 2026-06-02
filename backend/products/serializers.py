@@ -35,6 +35,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     category_name_am = serializers.CharField(source='category.name_am', read_only=True)
     category_icon = serializers.CharField(source='category.icon', read_only=True)
     category_slug = serializers.CharField(source='category.slug', read_only=True)
+    seller_username = serializers.CharField(source='seller.username', read_only=True)
     seller_name = serializers.SerializerMethodField()
     seller_business = serializers.SerializerMethodField()
     main_image = serializers.SerializerMethodField()
@@ -46,9 +47,9 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'title', 'slug', 'price', 'original_price', 'discount_percentage',
-                  'stock', 'condition', 'location', 'views', 'created_at', 'is_active',
+                  'stock', 'condition', 'brand', 'location', 'views', 'created_at', 'is_active',
                   'category', 'category_name', 'category_name_am', 'category_icon', 'category_slug',
-                  'seller', 'seller_name', 'seller_business', 'seller_phone',
+                  'seller', 'seller_username', 'seller_name', 'seller_business', 'seller_phone',
                   'main_image', 'is_featured', 'avg_rating', 'review_count']
 
     def get_seller_name(self, obj):
@@ -129,7 +130,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['title', 'category', 'description', 'price', 'original_price',
-                  'stock', 'condition', 'location', 'is_active']
+                  'stock', 'condition', 'brand', 'location', 'is_active']
 
     def validate(self, attrs):
         # Only validate when original_price is explicitly included in this request

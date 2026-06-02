@@ -23,7 +23,7 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-dark sticky-top shadow" style={{ zIndex: 1030, minHeight: 72, background: '#111d0e' }}>
       <div className="container-fluid px-4 py-2">
-        <Link className="navbar-brand me-4 d-flex align-items-center gap-2 lh-1" to={isAuthenticated ? '/dashboard' : '/'}>
+        <Link className="navbar-brand me-4 d-flex align-items-center gap-2 lh-1" to="/">
           <img src="/logo.png" alt="Beyalubet" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
           <div className="d-flex flex-column">
             <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>
@@ -38,16 +38,14 @@ export default function Navbar() {
         <div className="ms-auto d-flex align-items-center gap-2">
           {isAuthenticated ? (
             <>
-              {isBuyer && (
-                <Link to="/cart" className="btn btn-outline-light btn-sm position-relative">
-                  <i className="bi bi-cart3" />
-                  {cartCount > 0 && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" style={{ fontSize: 10 }}>
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
-              )}
+              <Link to="/cart" className="btn btn-outline-light btn-sm position-relative">
+                <i className="bi bi-cart3" />
+                {cartCount > 0 && (
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" style={{ fontSize: 10 }}>
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
 
               {/* Rich profile dropdown */}
               <div className="dropdown">
@@ -79,7 +77,14 @@ export default function Navbar() {
                           </div>
                       }
                       <div className="overflow-hidden">
-                        <div className="fw-bold text-truncate">{user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.username}</div>
+                        <div className="fw-bold text-truncate d-flex align-items-center gap-1">
+                          {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.username}
+                          {user?.is_email_verified && (
+                            <i className="bi bi-patch-check-fill flex-shrink-0"
+                              style={{ color: '#1d9bf0', fontSize: 13 }}
+                              title="Email Verified" />
+                          )}
+                        </div>
                         <div className="text-muted small text-truncate">{user?.email}</div>
                         <span className={`badge ${roleBadge[user?.role] || 'bg-secondary'} mt-1`} style={{ fontSize: 10 }}>
                           {user?.role?.toUpperCase()}

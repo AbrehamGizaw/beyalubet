@@ -31,13 +31,14 @@ class RegisterAPIView(APIView):
             else:
                 BuyerProfile.objects.create(user=user)
 
-            send_welcome_and_verification(user)
+            email_sent = send_welcome_and_verification(user)
 
             refresh = RefreshToken.for_user(user)
             return Response({
                 'user': UserSerializer(user).data,
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
+                'email_sent': email_sent,
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -168,8 +169,13 @@ class ResendVerificationAPIView(APIView):
             return Response({'detail': 'Email already verified.'})
         if not user.email:
             return Response({'detail': 'No email address on your account.'}, status=400)
-        send_verification_email(user)
-        return Response({'detail': 'Verification email sent.'})
+        sent = send_verification_email(user)
+        if not sent:
+            return Response(
+                {'detail': 'Could not send email. Please check your inbox or try again later.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        return Response({'detail': 'Verification email sent. Please check your inbox.'})
 
 
 class UnsubscribeAPIView(APIView):

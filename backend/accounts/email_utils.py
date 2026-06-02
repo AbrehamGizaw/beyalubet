@@ -2,12 +2,15 @@
 Beyalubet email notification utilities.
 All outgoing emails go through here so templates/wording are centralized.
 """
+import logging
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.core import signing
+
+logger = logging.getLogger(__name__)
 
 
 # ── Token generators ──────────────────────────────────────────────────────────
@@ -99,10 +102,10 @@ def _p(text):
 
 def _send(to_email, subject, html, text_fallback, user=None, essential=False):
     if not to_email:
-        return
+        return False
     # Respect opt-out for non-essential emails
     if user and not essential and not getattr(user, 'email_notifications', True):
-        return
+        return False
     try:
         msg = EmailMultiAlternatives(
             subject=subject,
@@ -115,9 +118,11 @@ def _send(to_email, subject, html, text_fallback, user=None, essential=False):
             unsub_url = _unsubscribe_url(user)
             msg.extra_headers['List-Unsubscribe'] = f'<{unsub_url}>'
             msg.extra_headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
-        msg.send(fail_silently=True)
-    except Exception:
-        pass
+        msg.send(fail_silently=False)
+        return True
+    except Exception as e:
+        logger.warning('Email failed  to=%s  subject=%r  error=%s', to_email, subject, e)
+        return False
 
 
 # ── 1. Welcome + email verification ──────────────────────────────────────────
@@ -136,7 +141,7 @@ def send_welcome_and_verification(user):
         _p("If you didn't create this account, you can safely ignore this email."),
         user=user,
     )
-    _send(
+    return _send(
         user.email,
         "Welcome to Beyalubet — Please verify your email",
         html,
@@ -158,7 +163,7 @@ def send_verification_email(user):
         _p("This link expires in 24 hours. If you didn't request this, you can ignore this email."),
         user=user,
     )
-    _send(
+    return _send(
         user.email,
         "Beyalubet — Verify your email address",
         html,

@@ -242,15 +242,21 @@ export default function ProductDetail() {
 
           {/* Seller */}
           <div className="card bg-light border-0 p-3 mb-4">
-            <div className="d-flex align-items-center gap-3">
-              <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: 50, height: 50 }}>
-                <i className="bi bi-shop fs-4 text-primary" />
+            <div className="d-flex align-items-center justify-content-between gap-3">
+              <div className="d-flex align-items-center gap-3">
+                <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                  style={{ width: 50, height: 50 }}>
+                  <i className="bi bi-shop fs-4 text-primary" />
+                </div>
+                <div>
+                  <h6 className="mb-0 fw-bold">{product.seller_business || product.seller_name}</h6>
+                  <small className="text-muted">{t('verifiedSeller')}</small>
+                </div>
               </div>
-              <div>
-                <h6 className="mb-0 fw-bold">{product.seller_business || product.seller_name}</h6>
-                <small className="text-muted">{t('verifiedSeller')}</small>
-              </div>
+              <Link to={`/sellers/${product.seller_username}`}
+                className="btn btn-sm btn-outline-primary flex-shrink-0">
+                <i className="bi bi-grid me-1" />View Products
+              </Link>
             </div>
           </div>
 
@@ -331,38 +337,86 @@ export default function ProductDetail() {
           )}
         </div>
 
-        {/* Write new review — buyers only, not their own product */}
-        {isBuyer && product.seller !== user?.id && (
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-header bg-transparent fw-bold py-3">
-              <i className="bi bi-pencil-square me-2" />{t('writeReview')}
-            </div>
-            <div className="card-body p-4">
-              {reviewMsg && (
-                <div className={`alert alert-${reviewMsg.type} py-2 mb-3`}>{reviewMsg.text}</div>
-              )}
-              <form onSubmit={handleReviewSubmit}>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">{t('yourRating')} *</label>
-                  <StarPicker value={newReview.rating}
-                    onChange={v => setNewReview(f => ({ ...f, rating: v }))} />
+        {(() => {
+          const myReview = reviews.find(r => r.is_mine)
+
+          // Already reviewed — show edit-your-review card
+          if (isBuyer && product.seller !== user?.id && myReview) {
+            return (
+              <div className="card border-0 shadow-sm mb-4 border-start border-primary border-3">
+                <div className="card-header bg-transparent py-3 d-flex align-items-center justify-content-between">
+                  <span className="fw-bold">
+                    <i className="bi bi-patch-check-fill text-primary me-2" />{t('yourReview')}
+                  </span>
+                  {inlineEdit?.id !== myReview.id && (
+                    <button className="btn btn-sm btn-outline-primary"
+                      onClick={() => setInlineEdit({ id: myReview.id, rating: myReview.rating, comment: myReview.comment })}>
+                      <i className="bi bi-pencil me-1" />{t('edit')}
+                    </button>
+                  )}
                 </div>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">{t('comment')} <span className="text-muted small">(optional)</span></label>
-                  <textarea className="form-control" rows={3}
-                    value={newReview.comment}
-                    onChange={e => setNewReview(f => ({ ...f, comment: e.target.value }))}
-                    placeholder={t('reviewPlaceholder')} />
+                <div className="card-body p-4">
+                  {reviewMsg && <div className={`alert alert-${reviewMsg.type} py-2 mb-3`}>{reviewMsg.text}</div>}
+                  {inlineEdit?.id === myReview.id ? (
+                    <>
+                      <StarPicker value={inlineEdit.rating}
+                        onChange={v => setInlineEdit(ie => ({ ...ie, rating: v }))} />
+                      <textarea className="form-control mb-3" rows={3} value={inlineEdit.comment}
+                        onChange={e => setInlineEdit(ie => ({ ...ie, comment: e.target.value }))} />
+                      <div className="d-flex gap-2">
+                        <button className="btn btn-primary btn-sm" onClick={handleReviewUpdate} disabled={editLoading}>
+                          {editLoading ? <span className="spinner-border spinner-border-sm" /> : t('save')}
+                        </button>
+                        <button className="btn btn-outline-secondary btn-sm" onClick={() => setInlineEdit(null)}>{t('cancel')}</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Stars rating={myReview.rating} />
+                      {myReview.comment && <p className="mb-0 mt-2 text-muted">{myReview.comment}</p>}
+                      <div className="text-muted small mt-2">{new Date(myReview.created_at).toLocaleDateString()}</div>
+                    </>
+                  )}
                 </div>
-                <button type="submit" className="btn btn-primary" disabled={submitLoading}>
-                  {submitLoading
-                    ? <><span className="spinner-border spinner-border-sm me-2" />{t('submitting')}</>
-                    : <><i className="bi bi-check-circle me-2" />{t('submitReview')}</>}
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
+              </div>
+            )
+          }
+
+          // Not yet reviewed — show write form
+          if (isBuyer && product.seller !== user?.id && !myReview) {
+            return (
+              <div className="card border-0 shadow-sm mb-4">
+                <div className="card-header bg-transparent fw-bold py-3">
+                  <i className="bi bi-pencil-square me-2" />{t('writeReview')}
+                </div>
+                <div className="card-body p-4">
+                  {reviewMsg && <div className={`alert alert-${reviewMsg.type} py-2 mb-3`}>{reviewMsg.text}</div>}
+                  <form onSubmit={handleReviewSubmit}>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">{t('yourRating')} *</label>
+                      <StarPicker value={newReview.rating}
+                        onChange={v => setNewReview(f => ({ ...f, rating: v }))} />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">{t('comment')} <span className="text-muted small">(optional)</span></label>
+                      <textarea className="form-control" rows={3}
+                        value={newReview.comment}
+                        onChange={e => setNewReview(f => ({ ...f, comment: e.target.value }))}
+                        placeholder={t('reviewPlaceholder')} />
+                    </div>
+                    <button type="submit" className="btn btn-primary" disabled={submitLoading}>
+                      {submitLoading
+                        ? <><span className="spinner-border spinner-border-sm me-2" />{t('submitting')}</>
+                        : <><i className="bi bi-check-circle me-2" />{t('submitReview')}</>}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )
+          }
+
+          return null
+        })()}
 
         {/* Review list */}
         {reviews.length === 0 ? (

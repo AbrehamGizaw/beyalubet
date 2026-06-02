@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner'
 import { useLanguage } from '../context/LanguageContext'
 
 export default function SubscriptionPlans() {
-  const { isAuthenticated, isSeller } = useAuth()
+  const { isAuthenticated, isSeller, isBuyer } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const [plans, setPlans] = useState([])
@@ -15,14 +15,13 @@ export default function SubscriptionPlans() {
 
   useEffect(() => {
     api.get('/subscriptions/plans/').then(r => setPlans(r.data)).finally(() => setLoading(false))
-    if (isAuthenticated && isSeller) {
+    if (isAuthenticated && (isSeller || isBuyer)) {
       api.get('/subscriptions/my/').then(r => setActiveSub(r.data?.active_subscription)).catch(() => {})
     }
-  }, [isAuthenticated, isSeller])
+  }, [isAuthenticated, isSeller, isBuyer])
 
   const handleSelect = (plan) => {
     if (!isAuthenticated) return navigate('/auth/login')
-    if (!isSeller) return
     navigate(`/subscriptions/subscribe/${plan.id}`)
   }
 
@@ -42,6 +41,13 @@ export default function SubscriptionPlans() {
           <i className="bi bi-gift-fill fs-5" />
           <span><strong>New sellers:</strong> Start with a free 1-month trial — no payment required!</span>
         </div>
+
+        {isBuyer && !activeSub && (
+          <div className="alert alert-info d-inline-flex align-items-center gap-2 px-4 py-2 mb-3">
+            <i className="bi bi-arrow-up-circle-fill fs-5" />
+            <span><strong>Upgrade to Seller:</strong> Subscribe to a plan and your account will be upgraded automatically.</span>
+          </div>
+        )}
 
         {activeSub && (
           <div className="alert alert-success d-inline-block px-4 py-2">
@@ -95,7 +101,7 @@ export default function SubscriptionPlans() {
                     className={`btn btn-${isActive ? 'outline-' + color : color} w-100`}
                     onClick={() => handleSelect(plan)}
                     disabled={isActive}>
-                    {isActive ? t('currentPlan') : isAuthenticated && isSeller ? t('subscribe') : t('getStarted')}
+                    {isActive ? t('currentPlan') : isAuthenticated && isBuyer ? 'Upgrade to Seller' : isAuthenticated ? t('subscribe') : t('getStarted')}
                   </button>
                 </div>
               </div>

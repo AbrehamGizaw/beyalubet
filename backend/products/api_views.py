@@ -2,8 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
+from django.db.models import Q, Count, Avg
 from django.shortcuts import get_object_or_404
+from accounts.models import User
 from .models import Product, Category, ProductImage, Review
 from .serializers import (
     CategorySerializer, ProductListSerializer,
@@ -214,6 +215,11 @@ class ProductReviewsAPIView(APIView):
             return Response({'detail': 'Only buyers can write reviews.'}, status=403)
         if product.seller == request.user:
             return Response({'detail': 'You cannot review your own product.'}, status=403)
+        if Review.objects.filter(product=product, buyer=request.user).exists():
+            return Response(
+                {'detail': 'You have already reviewed this product. Edit your existing review instead.'},
+                status=409,
+            )
 
         try:
             rating = int(request.data.get('rating', 0))
@@ -255,3 +261,160 @@ class ReviewDetailAPIView(APIView):
             return Response({'detail': 'Not authorized.'}, status=403)
         review.delete()
         return Response(status=204)
+
+
+class SellersByCategoryAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        categories = Category.objects.filter(
+            products__is_active=True,
+            products__seller__role='seller',
+        ).distinct().order_by('name')
+
+        result = []
+        for cat in categories:
+            sellers_qs = (
+                User.objects
+                .filter(role='seller', products__category=cat, products__is_active=True)
+                .distinct()
+                .annotate(
+                    product_count=Count(
+                        'products',
+                        filter=Q(products__category=cat, products__is_active=True),
+                        distinct=True,
+                    ),
+                    avg_rating=Avg(
+                        'products__reviews__rating',
+                        filter=Q(products__category=cat),
+                    ),
+                )
+                .order_by('-product_count')[:8]
+            )
+
+            sellers = []
+            for s in sellers_qs:
+                try:
+                    business = s.seller_profile.business_name or s.username
+                except Exception:
+                    business = s.username
+                sellers.append({
+                    'id': s.id,
+                    'username': s.username,
+                    'business_name': business,
+                    'product_count': s.product_count,
+                    'avg_rating': round(float(s.avg_rating or 0), 1),
+                })
+
+            if sellers:
+                result.append({
+                    'id': cat.id,
+                    'name': cat.name,
+                    'name_am': cat.name_am,
+                    'icon': cat.icon or 'bi-grid',
+                    'slug': cat.slug,
+                    'seller_count': len(sellers),
+                    'sellers': sellers,
+                })
+
+        return Response(result)
+
+
+class SellersListAPIView(APIView):
+    """Flat list of all active sellers — public, no auth required."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        q = request.query_params.get('q', '').strip()
+        sellers_qs = (
+            User.objects
+            .filter(role='seller', is_active=True, is_deleted=False, products__is_active=True)
+            .distinct()
+            .annotate(
+                product_count=Count('products', filter=Q(products__is_active=True), distinct=True),
+                avg_rating=Avg('products__reviews__rating'),
+            )
+            .order_by('-product_count')
+        )
+        if q:
+            sellers_qs = sellers_qs.filter(
+                Q(username__icontains=q) |
+                Q(first_name__icontains=q) |
+                Q(last_name__icontains=q) |
+                Q(seller_profile__business_name__icontains=q)
+            )
+
+        data = []
+        for s in sellers_qs:
+            try:
+                business = s.seller_profile.business_name or s.username
+                is_verified = s.seller_profile.is_verified
+            except Exception:
+                business = s.username
+                is_verified = False
+            categories = Category.objects.filter(
+                products__seller=s, products__is_active=True
+            ).distinct().values('id', 'name', 'name_am', 'icon', 'slug')
+            data.append({
+                'id': s.id,
+                'username': s.username,
+                'business_name': business,
+                'is_verified': is_verified,
+                'is_email_verified': s.is_email_verified,
+                'product_count': s.product_count,
+                'avg_rating': round(float(s.avg_rating or 0), 1),
+                'categories': list(categories),
+            })
+        return Response(data)
+
+
+class SellerPublicAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, username):
+        seller = get_object_or_404(User, username=username, role='seller', is_deleted=False)
+
+        try:
+            sp = seller.seller_profile
+            business_name = sp.business_name or seller.username
+            business_description = sp.business_description
+            is_verified = sp.is_verified
+        except Exception:
+            business_name = seller.username
+            business_description = ''
+            is_verified = False
+
+        products_qs = Product.objects.filter(seller=seller, is_active=True)
+
+        category_slug = request.query_params.get('category', '')
+        if category_slug:
+            products_qs = products_qs.filter(category__slug=category_slug)
+
+        ordering = request.query_params.get('ordering', '-created_at')
+        if ordering not in ('-created_at', 'created_at', 'price', '-price'):
+            ordering = '-created_at'
+        products_qs = products_qs.order_by(ordering)
+
+        all_products = Product.objects.filter(seller=seller, is_active=True)
+        stats = all_products.aggregate(
+            avg_rating=Avg('reviews__rating'),
+            total_products=Count('id'),
+        )
+        categories = Category.objects.filter(
+            products__seller=seller, products__is_active=True
+        ).distinct().order_by('name')
+
+        return Response({
+            'id': seller.id,
+            'username': seller.username,
+            'full_name': seller.get_full_name() or seller.username,
+            'business_name': business_name,
+            'business_description': business_description,
+            'is_email_verified': seller.is_email_verified,
+            'is_verified': is_verified,
+            'date_joined': seller.date_joined,
+            'avg_rating': round(float(stats['avg_rating'] or 0), 1),
+            'total_products': stats['total_products'],
+            'categories': CategorySerializer(categories, many=True).data,
+            'products': ProductListSerializer(products_qs[:48], many=True, context={'request': request}).data,
+        })

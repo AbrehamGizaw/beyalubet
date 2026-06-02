@@ -31,6 +31,8 @@ import BuyerReport from './pages/BuyerReport'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminSubscriptions from './pages/AdminSubscriptions'
 import AdminUsers from './pages/AdminUsers'
+import SellerPage from './pages/SellerPage'
+import SellersList from './pages/SellersList'
 import AdminUserDetail from './pages/AdminUserDetail'
 import AdminArchivedUsers from './pages/AdminArchivedUsers'
 import AdminReports from './pages/AdminReports'
@@ -58,14 +60,16 @@ export default function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/products" element={<Products />} />
           <Route path="/products/:slug" element={<ProductDetail />} />
+          <Route path="/sellers" element={<ProtectedRoute><SellersList /></ProtectedRoute>} />
+          <Route path="/sellers/:username" element={<SellerPage />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-          {/* Buyer */}
-          <Route path="/cart" element={<ProtectedRoute role="buyer"><Cart /></ProtectedRoute>} />
-          <Route path="/checkout" element={<ProtectedRoute role="buyer"><Checkout /></ProtectedRoute>} />
-          <Route path="/orders" element={<ProtectedRoute role="buyer"><OrderList /></ProtectedRoute>} />
-          <Route path="/orders/:orderNumber" element={<ProtectedRoute role="buyer"><OrderDetail /></ProtectedRoute>} />
+          {/* Shopping — available to all authenticated users */}
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><OrderList /></ProtectedRoute>} />
+          <Route path="/orders/:orderNumber" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/reports/buyer" element={<ProtectedRoute role="buyer"><BuyerReport /></ProtectedRoute>} />
 
           {/* Seller */}
@@ -73,8 +77,8 @@ export default function App() {
           <Route path="/seller/products/create" element={<ProtectedRoute role="seller"><CreateProduct /></ProtectedRoute>} />
           <Route path="/seller/products/:slug/edit" element={<ProtectedRoute role="seller"><EditProduct /></ProtectedRoute>} />
           <Route path="/seller/orders" element={<ProtectedRoute role="seller"><SellerOrders /></ProtectedRoute>} />
-          <Route path="/subscriptions/subscribe/:planId" element={<ProtectedRoute role="seller"><Subscribe /></ProtectedRoute>} />
-          <Route path="/subscriptions/my" element={<ProtectedRoute role="seller"><MySubscription /></ProtectedRoute>} />
+          <Route path="/subscriptions/subscribe/:planId" element={<ProtectedRoute role={['buyer', 'seller']}><Subscribe /></ProtectedRoute>} />
+          <Route path="/subscriptions/my" element={<ProtectedRoute role={['buyer', 'seller']}><MySubscription /></ProtectedRoute>} />
           <Route path="/reports/seller" element={<ProtectedRoute role="seller"><SellerReport /></ProtectedRoute>} />
 
           {/* Admin */}

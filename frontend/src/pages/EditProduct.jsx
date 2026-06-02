@@ -14,8 +14,8 @@ function Stars({ rating }) {
   )
 }
 
-const CONDITIONS = ['new', 'used', 'refurbished']
-const CONDITION_LABELS = { new: 'Brand New', used: 'Used', refurbished: 'Refurbished' }
+const CONDITIONS = ['new', 'slightly_used', 'used', 'refurbished']
+const CONDITION_LABELS = { new: 'Brand New', slightly_used: 'Slightly Used', used: 'Used', refurbished: 'Refurbished' }
 
 export default function EditProduct() {
   const { slug } = useParams()
@@ -56,6 +56,7 @@ export default function EditProduct() {
         original_price: p.original_price || '',
         stock: p.stock || 0,
         condition: p.condition || 'new',
+        brand: p.brand || '',
         category: p.category || '',
         location: p.location || '',
         is_active: p.is_active !== undefined ? p.is_active : true,
@@ -78,6 +79,21 @@ export default function EditProduct() {
   }
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const formatPrice = (raw) => {
+    if (raw === '' || raw == null) return ''
+    const [int, dec] = String(raw).split('.')
+    return int.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (dec !== undefined ? '.' + dec : '')
+  }
+
+  const handlePrice = (e, field) => {
+    const stripped = e.target.value.replace(/,/g, '').replace(/[^\d.]/g, '')
+    const dotIdx = stripped.indexOf('.')
+    const clean = dotIdx >= 0
+      ? stripped.slice(0, dotIdx + 1) + stripped.slice(dotIdx + 1).replace(/\./g, '')
+      : stripped
+    set(field, clean)
+  }
 
   const handleImages = (e) => {
     const files = Array.from(e.target.files)
@@ -168,13 +184,22 @@ export default function EditProduct() {
                 <div className="row g-3">
                   <div className="col-sm-6">
                     <label className="form-label fw-semibold">{t('priceLabel')} *</label>
-                    <input type="number" className="form-control" value={form.price} min="0" step="0.01"
-                      onChange={e => set('price', e.target.value)} required />
+                    <div className="input-group">
+                      <span className="input-group-text">ETB</span>
+                      <input type="text" inputMode="decimal" className="form-control"
+                        value={formatPrice(form.price)}
+                        onChange={e => handlePrice(e, 'price')}
+                        required />
+                    </div>
                   </div>
                   <div className="col-sm-6">
                     <label className="form-label fw-semibold">{t('originalPriceLabel')} <span className="text-muted small">(optional)</span></label>
-                    <input type="number" className="form-control" value={form.original_price} min="0" step="0.01"
-                      onChange={e => set('original_price', e.target.value)} />
+                    <div className="input-group">
+                      <span className="input-group-text">ETB</span>
+                      <input type="text" inputMode="decimal" className="form-control"
+                        value={formatPrice(form.original_price)}
+                        onChange={e => handlePrice(e, 'original_price')} />
+                    </div>
                     <div className="form-text">Must be higher than selling price (shows discount badge)</div>
                   </div>
                   <div className="col-sm-4">
@@ -195,6 +220,12 @@ export default function EditProduct() {
                       <option value="">Select...</option>
                       {categories.map(c => <option key={c.id} value={c.id}>{lang === 'am' ? (c.name_am || c.name) : c.name}</option>)}
                     </select>
+                  </div>
+                  <div className="col-sm-4">
+                    <label className="form-label fw-semibold">Brand <span className="text-muted small">(optional)</span></label>
+                    <input className="form-control" value={form.brand}
+                      onChange={e => set('brand', e.target.value)}
+                      placeholder="e.g. Samsung, Nike, Apple" />
                   </div>
                   <div className="col-sm-8">
                     <label className="form-label fw-semibold">{t('locationLabel')}</label>

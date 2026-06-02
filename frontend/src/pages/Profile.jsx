@@ -140,7 +140,14 @@ export default function Profile() {
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" className="d-none" onChange={uploadImage} />
               </div>
-              <h5 className="fw-bold mb-0">{user?.first_name || user?.username}</h5>
+              <div className="d-flex align-items-center justify-content-center gap-1 mb-0">
+                <h5 className="fw-bold mb-0">{user?.first_name || user?.username}</h5>
+                {user?.is_email_verified && (
+                  <i className="bi bi-patch-check-fill"
+                    style={{ color: '#1d9bf0', fontSize: 18 }}
+                    title="Email Verified" />
+                )}
+              </div>
               <p className="text-muted small mb-2">@{user?.username}</p>
               <span className={`badge bg-${isSeller ? 'warning text-dark' : 'primary'}`}>
                 {isSeller ? 'Seller' : 'Buyer'}
@@ -179,8 +186,18 @@ export default function Profile() {
                     </div>
                     <div className="col-sm-6">
                       <label className="form-label fw-semibold">{t('email')}</label>
-                      <input type="email" className="form-control" value={general.email}
-                        onChange={e => setGeneral(g => ({ ...g, email: e.target.value }))} />
+                      <div className="input-group">
+                        <input type="email" className="form-control" value={general.email}
+                          onChange={e => setGeneral(g => ({ ...g, email: e.target.value }))} />
+                        <span className={`input-group-text ${user?.is_email_verified ? 'text-success border-success bg-success bg-opacity-10' : 'text-warning border-warning bg-warning bg-opacity-10'}`}
+                          title={user?.is_email_verified ? 'Email verified' : 'Email not verified'}>
+                          <i className={`bi bi-${user?.is_email_verified ? 'patch-check-fill' : 'exclamation-circle-fill'}`} />
+                        </span>
+                      </div>
+                      {user?.is_email_verified
+                        ? <div className="form-text text-success"><i className="bi bi-check2 me-1" />Verified</div>
+                        : <div className="form-text text-warning"><i className="bi bi-exclamation-triangle me-1" />Not verified</div>
+                      }
                     </div>
                     <div className="col-sm-6">
                       <label className="form-label fw-semibold">{t('phone')}</label>

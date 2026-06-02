@@ -131,7 +131,14 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # ── Email ──────────────────────────────────────────────────────────────────────
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# DEBUG=True → console backend (verification links print to the terminal, no SMTP needed)
+# DEBUG=False → Gmail SMTP (set EMAIL_HOST_PASSWORD to a valid Gmail App Password in .env)
+# Override any time by setting EMAIL_BACKEND explicitly in .env
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG
+    else 'django.core.mail.backends.smtp.EmailBackend',
+)
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
@@ -139,6 +146,15 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'beyalubet@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'Beyalubet <beyalubet@gmail.com>'
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'loggers': {
+        'accounts.email_utils': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+    },
+}
 
 # ── Platform payment info (shown to sellers when subscribing) ──────────────────
 PLATFORM_BANK_NAME = 'Commercial Bank of Ethiopia'

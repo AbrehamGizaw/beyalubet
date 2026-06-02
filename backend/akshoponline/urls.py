@@ -22,7 +22,7 @@ from products.api_views import (
     CategoryListAPIView, ProductListAPIView,
     ProductDetailAPIView, MyProductsAPIView,
     MyProductDetailAPIView, ProductImageDeleteAPIView,
-    ProductReviewsAPIView, ReviewDetailAPIView,
+    ProductReviewsAPIView, ReviewDetailAPIView, SellersByCategoryAPIView, SellerPublicAPIView, SellersListAPIView,
 )
 from orders.api_views import (
     CartAPIView, AddToCartAPIView, CartItemAPIView,
@@ -63,6 +63,9 @@ urlpatterns = [
     path('api/products/my-products/<slug:slug>/images/<int:img_id>/', ProductImageDeleteAPIView.as_view(), name='api_product_image_delete'),
     path('api/products/', ProductListAPIView.as_view(), name='api_products'),
     path('api/products/<slug:slug>/', ProductDetailAPIView.as_view(), name='api_product_detail'),
+    path('api/products/sellers-by-category/', SellersByCategoryAPIView.as_view(), name='api_sellers_by_category'),
+    path('api/sellers/', SellersListAPIView.as_view(), name='api_sellers_list'),
+    path('api/sellers/<str:username>/', SellerPublicAPIView.as_view(), name='api_seller_public'),
     path('api/products/<slug:slug>/reviews/', ProductReviewsAPIView.as_view(), name='api_product_reviews'),
     path('api/products/<slug:slug>/reviews/<int:review_id>/', ReviewDetailAPIView.as_view(), name='api_review_detail'),
 

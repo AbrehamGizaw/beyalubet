@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import api from '../api/axios'
@@ -7,6 +7,7 @@ import Spinner from '../components/Spinner'
 
 export default function Dashboard() {
   const { user, isSeller, isBuyer } = useAuth()
+  const navigate = useNavigate()
   const { t } = useLanguage()
   const [resendStatus, setResendStatus] = useState(null)
 
@@ -20,6 +21,15 @@ export default function Dashboard() {
   }
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [sellerCats, setSellerCats] = useState([])
+  const [activeCat, setActiveCat] = useState(null)
+
+  useEffect(() => {
+    api.get('/products/sellers-by-category/').then(r => {
+      setSellerCats(r.data)
+      if (r.data.length > 0) setActiveCat(r.data[0].id)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -210,19 +220,42 @@ export default function Dashboard() {
           </div>
 
           <div className="row g-3 mb-4">
-            <div className="col-md-4">
+            <div className="col-sm-6 col-md-3">
               <Link to="/products" className="btn btn-primary w-100 py-3">
                 <i className="bi bi-search me-2 fs-5" />{t('browseProducts')}
               </Link>
             </div>
-            <div className="col-md-4">
+            <div className="col-sm-6 col-md-3">
+              <Link to="/sellers" className="btn btn-outline-success w-100 py-3">
+                <i className="bi bi-shop me-2 fs-5" />Browse Sellers
+              </Link>
+            </div>
+            <div className="col-sm-6 col-md-3">
               <Link to="/cart" className="btn btn-outline-primary w-100 py-3">
                 <i className="bi bi-cart3 me-2 fs-5" />{t('myCart')}
               </Link>
             </div>
-            <div className="col-md-4">
+            <div className="col-sm-6 col-md-3">
               <Link to="/orders" className="btn btn-outline-secondary w-100 py-3">
                 <i className="bi bi-bag me-2 fs-5" />{t('myOrders')}
+              </Link>
+            </div>
+          </div>
+
+          {/* Upgrade to Seller CTA */}
+          <div className="card border-0 shadow-sm mb-4"
+            style={{ background: 'linear-gradient(135deg, #2d6600 0%, #5baa00 100%)' }}>
+            <div className="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+              <div className="text-white">
+                <h5 className="fw-bold mb-1">
+                  <i className="bi bi-shop me-2" />Want to start selling?
+                </h5>
+                <p className="mb-0 small" style={{ opacity: 0.85 }}>
+                  Upgrade your buyer account to a seller account — subscribe to a plan and start listing products today.
+                </p>
+              </div>
+              <Link to="/subscriptions" className="btn btn-warning fw-semibold flex-shrink-0">
+                <i className="bi bi-arrow-up-circle me-2" />Upgrade to Seller
               </Link>
             </div>
           </div>
@@ -254,6 +287,67 @@ export default function Dashboard() {
             </div>
           )}
         </>
+      )}
+
+      {/* Sellers by Category — visible to all logged-in users */}
+      {sellerCats.length > 0 && (
+        <div className="card border-0 shadow-sm mt-4">
+          <div className="card-header bg-transparent py-3 d-flex align-items-center justify-content-between">
+            <span className="fw-bold fs-6">
+              <i className="bi bi-shop me-2 text-primary" />Browse Sellers by Category
+            </span>
+            <Link to="/products" className="btn btn-sm btn-outline-primary">View All Products</Link>
+          </div>
+          <div className="card-body p-4">
+            {/* Category tabs */}
+            <div className="d-flex flex-wrap gap-2 mb-4">
+              {sellerCats.map(cat => (
+                <button key={cat.id}
+                  className={`btn btn-sm ${activeCat === cat.id ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  onClick={() => setActiveCat(cat.id)}>
+                  <i className={`bi ${cat.icon} me-1`} />
+                  {cat.name}
+                  <span className={`badge ms-1 ${activeCat === cat.id ? 'bg-white text-primary' : 'bg-secondary'}`}
+                    style={{ fontSize: 10 }}>{cat.seller_count}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Sellers grid for selected category */}
+            {sellerCats.filter(c => c.id === activeCat).map(cat => (
+              <div key={cat.id} className="row g-3">
+                {cat.sellers.map(seller => (
+                  <div key={seller.id} className="col-sm-6 col-md-4 col-lg-3">
+                    <div className="card h-100 border-0 bg-light">
+                      <div className="card-body p-3 d-flex flex-column">
+                        <div className="d-flex align-items-center gap-2 mb-2">
+                          <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                            style={{ width: 40, height: 40 }}>
+                            <i className="bi bi-shop text-primary" />
+                          </div>
+                          <div className="overflow-hidden">
+                            <div className="fw-semibold small text-truncate">{seller.business_name}</div>
+                            <div className="text-muted" style={{ fontSize: 11 }}>@{seller.username}</div>
+                          </div>
+                        </div>
+                        <div className="d-flex align-items-center gap-3 mb-3 small text-muted">
+                          <span><i className="bi bi-box-seam me-1" />{seller.product_count}</span>
+                          {seller.avg_rating > 0 && (
+                            <span><i className="bi bi-star-fill text-warning me-1" />{seller.avg_rating}</span>
+                          )}
+                        </div>
+                        <button className="btn btn-sm btn-outline-primary mt-auto"
+                          onClick={() => navigate(`/sellers/${seller.username}`)}>
+                          <i className="bi bi-shop me-1" />View Seller
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

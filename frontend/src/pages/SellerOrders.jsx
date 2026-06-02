@@ -121,13 +121,20 @@ export default function SellerOrders() {
                             </button>
                           </div>
                         ) : (
-                          <select className="form-select form-select-sm" style={{ minWidth: 140 }}
-                            value={order.status} disabled={updating === order.id}
-                            onChange={e => updateStatus(order.id, e.target.value)}>
-                            {STATUS_CHOICES.map(s => (
-                              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                            ))}
-                          </select>
+                          <div className="d-flex flex-column gap-1">
+                            {order.payment_status === 'paid' && (
+                              <span className="badge bg-success" style={{ fontSize: 10 }}>
+                                <i className="bi bi-lock-fill me-1" />Payment Confirmed
+                              </span>
+                            )}
+                            <select className="form-select form-select-sm" style={{ minWidth: 140 }}
+                              value={order.status} disabled={updating === order.id}
+                              onChange={e => updateStatus(order.id, e.target.value)}>
+                              {STATUS_CHOICES.map(s => (
+                                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                              ))}
+                            </select>
+                          </div>
                         )}
                       </td>
                     </tr>

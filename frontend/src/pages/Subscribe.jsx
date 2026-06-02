@@ -3,11 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import api from '../api/axios'
 import Spinner from '../components/Spinner'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 
 export default function Subscribe() {
   const { planId } = useParams()
   const navigate = useNavigate()
   const { t } = useLanguage()
+  const { isBuyer, refreshUser } = useAuth()
   const [plan, setPlan] = useState(null)
   const [platform, setPlatform] = useState({})
   const [activeSub, setActiveSub] = useState(null)
@@ -36,7 +38,10 @@ export default function Subscribe() {
 
   const handleSubmit = async (e) => {
     if (e?.preventDefault) e.preventDefault()
-    if (!plan?.is_free && (!ref.trim() || !senderName.trim())) return
+    if (!plan?.is_free && (!ref.trim() || !senderName.trim() || !screenshot)) {
+      setMsg({ type: 'danger', text: 'Please fill in all required fields including a payment screenshot.' })
+      return
+    }
     setSubmitting(true)
     try {
       const formData = new FormData()
@@ -47,8 +52,12 @@ export default function Subscribe() {
       await api.post('/subscriptions/subscribe/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      setMsg({ type: 'success', text: 'Subscription activated! You can now list your products.' })
-      setTimeout(() => navigate('/subscriptions/my'), 2500)
+      await refreshUser()
+      const successMsg = plan?.is_free
+        ? 'Account upgraded to seller! You can now list your products.'
+        : 'Subscription submitted! Your account will be upgraded to seller once approved.'
+      setMsg({ type: 'success', text: successMsg })
+      setTimeout(() => navigate(plan?.is_free ? '/seller/products' : '/subscriptions/my'), 2500)
     } catch (err) {
       setMsg({ type: 'danger', text: err.response?.data?.detail || 'Failed to subscribe.' })
     } finally {
@@ -91,6 +100,20 @@ export default function Subscribe() {
         </Link>
         <h3 className="fw-bold mb-0">{t('subscribe')} — {plan.name}</h3>
       </div>
+
+      {isBuyer && (
+        <div className="alert alert-info d-flex align-items-start gap-3 mb-4">
+          <i className="bi bi-arrow-up-circle-fill fs-4 flex-shrink-0 mt-1" />
+          <div>
+            <div className="fw-semibold">Upgrading your account to Seller</div>
+            <div className="small mt-1">
+              {plan?.is_free
+                ? 'Activating this free trial will instantly upgrade your buyer account to a seller account. You\'ll keep your order history.'
+                : 'Once this subscription is approved by an admin, your buyer account will be upgraded to a seller account automatically.'}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="row g-4">
         <div className="col-lg-6">
@@ -192,10 +215,15 @@ export default function Subscribe() {
                       <div className="form-text">{t('enterRefNote')}</div>
                     </div>
                     <div className="mb-4">
-                      <label className="form-label fw-semibold">Payment Screenshot <span className="text-muted fw-normal">(optional)</span></label>
-                      <input type="file" className="form-control form-control-lg" accept="image/*"
-                        onChange={e => setScreenshot(e.target.files[0])} />
-                      <div className="form-text">Upload a screenshot of your payment confirmation</div>
+                      <label className="form-label fw-semibold">
+                        Payment Screenshot <span className="text-danger">*</span>
+                      </label>
+                      <input type="file" className={`form-control form-control-lg ${!screenshot ? 'border-danger' : 'border-success'}`}
+                        accept="image/*" required
+                        onChange={e => setScreenshot(e.target.files[0] || null)} />
+                      <div className="form-text text-danger fw-semibold">
+                        <i className="bi bi-exclamation-circle me-1" />Required — upload a screenshot of your payment confirmation
+                      </div>
                       {screenshot && (
                         <img src={URL.createObjectURL(screenshot)} alt="preview"
                           className="mt-2 rounded border" style={{ maxHeight: 180, maxWidth: '100%', objectFit: 'contain' }} />
